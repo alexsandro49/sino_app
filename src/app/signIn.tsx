@@ -1,7 +1,7 @@
-import { ThemedText } from '@/components/themed-text';
-import { useTheme } from '@/hooks/use-theme';
-import { Bell } from 'lucide-react-native';
+import { useState } from 'react';
 import {
+  ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -11,9 +11,53 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Bell } from 'lucide-react-native';
+import * as Linking from 'expo-linking';
 
-export default function signIn() {
+import { ThemedText } from '@/components/themed-text';
+import { useTheme } from '@/hooks/use-theme';
+import { supabase } from '@/lib/supabase';
+
+export default function SignIn() {
   const theme = useTheme();
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  async function handleMagicLinkLogin() {
+    const trimmedEmail = email.trim();
+
+    if (!trimmedEmail) {
+      Alert.alert('Email obrigatório', 'Por favor, informe seu email para continuar.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const redirectTo = Linking.createURL('/homeScreen');
+      const { error } = await supabase.auth.signInWithOtp({
+        email: trimmedEmail,
+        options: {
+          emailRedirectTo: redirectTo,
+        },
+      });
+
+      if (error) {
+        Alert.alert('Erro ao enviar link', error.message);
+      } else {
+        Alert.alert(
+          'Verifique seu e-mail',
+          'Enviamos um link mágico de acesso para o seu endereço de e-mail.'
+        );
+      }
+    } catch (err) {
+      Alert.alert(
+        'Erro inesperado',
+        err instanceof Error ? err.message : 'Não foi possível enviar o link de acesso.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
@@ -68,13 +112,24 @@ export default function signIn() {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
+                value={email}
+                onChangeText={setEmail}
+                editable={!loading}
+                onSubmitEditing={handleMagicLinkLogin}
+                returnKeyType="send"
               />
 
               <TouchableOpacity
-                style={styles.primaryButton}
+                style={[styles.primaryButton, loading && styles.buttonDisabled]}
                 activeOpacity={0.8}
+                onPress={handleMagicLinkLogin}
+                disabled={loading}
               >
-                <ThemedText style={styles.primaryButtonText}>Entrar</ThemedText>
+                {loading ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <ThemedText style={styles.primaryButtonText}>Entrar</ThemedText>
+                )}
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -167,6 +222,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 2,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
   primaryButtonText: {
     fontSize: 16,
