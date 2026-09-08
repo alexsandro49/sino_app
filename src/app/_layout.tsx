@@ -16,7 +16,8 @@ export default function RootLayout() {
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (session) {
-          router.replace("/homeScreen");
+          const hasName = Boolean(session.user.user_metadata?.full_name);
+          router.replace(hasName ? "/homeScreen" : "/collectName");
         }
       },
     );
