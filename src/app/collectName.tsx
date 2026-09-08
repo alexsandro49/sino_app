@@ -1,24 +1,24 @@
 import { useState } from "react";
 import { UserRound } from "lucide-react-native";
 import {
-  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   StyleSheet,
-  TextInput,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/themed-text";
+import { Button } from "@/components/ui/button";
+import { TextField } from "@/components/ui/text-field";
+import { useAuth } from "@/contexts/auth-context";
 import { useTheme } from "@/hooks/use-theme";
-import { supabase } from "@/lib/supabase";
 
 export default function CollectName() {
   const theme = useTheme();
+  const { updateDisplayName } = useAuth();
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -32,12 +32,10 @@ export default function CollectName() {
 
     setLoading(true);
     try {
-      const { error } = await supabase.auth.updateUser({
-        data: { full_name: trimmedName },
-      });
+      const { error } = await updateDisplayName(trimmedName);
 
       if (error) {
-        Alert.alert("Erro ao salvar", error.message);
+        Alert.alert("Erro ao salvar", error);
       }
     } catch (err) {
       Alert.alert(
@@ -71,17 +69,8 @@ export default function CollectName() {
             </View>
 
             <View style={styles.bottomSection}>
-              <TextInput
-                style={[
-                  styles.input,
-                  {
-                    color: theme.text,
-                    borderColor: theme.text,
-                    backgroundColor: theme.background,
-                  },
-                ]}
+              <TextField
                 placeholder="Seu nome"
-                placeholderTextColor={theme.textSecondary}
                 autoCapitalize="words"
                 autoCorrect={false}
                 value={name}
@@ -91,18 +80,7 @@ export default function CollectName() {
                 returnKeyType="done"
               />
 
-              <TouchableOpacity
-                style={[styles.primaryButton, loading && styles.buttonDisabled]}
-                activeOpacity={0.8}
-                onPress={handleSave}
-                disabled={loading}
-              >
-                {loading ? (
-                  <ActivityIndicator color="#FFFFFF" />
-                ) : (
-                  <ThemedText style={styles.primaryButtonText}>Continuar</ThemedText>
-                )}
-              </TouchableOpacity>
+              <Button label="Continuar" onPress={handleSave} loading={loading} />
             </View>
           </View>
         </ScrollView>
@@ -153,32 +131,5 @@ const styles = StyleSheet.create({
     width: "100%",
     gap: 14,
     paddingBottom: 8,
-  },
-  input: {
-    width: "100%",
-    height: 52,
-    borderWidth: 1.5,
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    fontSize: 16,
-  },
-  primaryButton: {
-    width: "100%",
-    height: 52,
-    backgroundColor: "#27374D",
-    borderColor: "#27374D",
-    borderWidth: 1.5,
-    borderRadius: 14,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 2,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  primaryButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#FFFFFF",
   },
 });

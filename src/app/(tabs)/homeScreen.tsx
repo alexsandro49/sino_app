@@ -1,27 +1,26 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Plus } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 
 import { ThemedText } from '@/components/themed-text';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/auth-context';
 import { useTheme } from '@/hooks/use-theme';
-import { supabase } from '@/lib/supabase';
 
 export default function HomeScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const [userName, setUserName] = useState('');
+  const { session, loading } = useAuth();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) {
-        router.replace('/signIn');
-        return;
-      }
-      setUserName(data.session.user.user_metadata?.full_name ?? '');
-    });
-  }, [router]);
+    if (!loading && !session) {
+      router.replace('/signIn');
+    }
+  }, [loading, session, router]);
+
+  const userName = session?.user.user_metadata?.full_name ?? '';
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
@@ -36,16 +35,7 @@ export default function HomeScreen() {
           Você não está{'\n'}rastreando nenhum ticket
         </ThemedText>
 
-        <TouchableOpacity
-          style={styles.primaryActionButton}
-          activeOpacity={0.7}
-          accessibilityLabel="Cadastrar ticket"
-          accessibilityRole="button"
-        >
-          <ThemedText style={styles.buttonText}>
-            + Cadastrar o primeiro
-          </ThemedText>
-        </TouchableOpacity>
+        <Button label="+ Cadastrar o primeiro" style={styles.primaryActionButton} />
       </View>
 
       <View style={styles.fabContainer}>
@@ -93,25 +83,8 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   primaryActionButton: {
-    backgroundColor: '#27374D',
-    borderWidth: 1.5,
-    borderColor: '#000000',
-    borderRadius: 10,
-    paddingVertical: 10,
+    width: 'auto',
     paddingHorizontal: 24,
-    minHeight: 44,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  buttonText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#FFFFFF',
   },
   fabContainer: {
     position: 'absolute',

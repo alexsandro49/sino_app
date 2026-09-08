@@ -1,29 +1,23 @@
-import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { CircleUserRound } from "lucide-react-native";
 
 import { ThemedText } from "@/components/themed-text";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/auth-context";
 import { useTheme } from "@/hooks/use-theme";
-import { supabase } from "@/lib/supabase";
 
 export default function User() {
   const theme = useTheme();
   const router = useRouter();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const { session, signOut } = useAuth();
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) return;
-      setName(data.session.user.user_metadata?.full_name ?? "");
-      setEmail(data.session.user.email ?? "");
-    });
-  }, []);
+  const name = session?.user.user_metadata?.full_name ?? "";
+  const email = session?.user.email ?? "";
 
   async function handleLogout() {
-    await supabase.auth.signOut();
+    await signOut();
     router.replace("/signIn");
   }
 
@@ -42,13 +36,7 @@ export default function User() {
       </View>
 
       <View style={styles.actionsSection}>
-        <TouchableOpacity
-          style={[styles.outlinedButton, { borderColor: theme.text }]}
-          activeOpacity={0.7}
-          onPress={handleLogout}
-        >
-          <ThemedText style={styles.buttonText}>Sair</ThemedText>
-        </TouchableOpacity>
+        <Button variant="outlined" label="Sair" onPress={handleLogout} />
       </View>
     </SafeAreaView>
   );
@@ -82,18 +70,5 @@ const styles = StyleSheet.create({
   },
   actionsSection: {
     gap: 14,
-  },
-  outlinedButton: {
-    width: "100%",
-    height: 52,
-    borderWidth: 1.5,
-    borderRadius: 14,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 16,
-  },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: "500",
   },
 });
