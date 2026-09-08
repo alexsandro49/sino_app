@@ -35,6 +35,18 @@ npm run reset-project
 
 This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
 
+### Known issue: Google/GitHub login doesn't work in Expo Go on Android
+
+Testing the Google/GitHub sign-in on **Expo Go on Android** fails with `Failed to download remote update` after authorizing and returning from the browser. This is a confirmed, unresolved limitation of Expo Go itself — it doesn't reliably deep-link back into the running session on Android (see [expo/expo#22572](https://github.com/expo/expo/issues/22572), [#27500](https://github.com/expo/expo/issues/27500), [#34187](https://github.com/expo/expo/issues/34187)). It's not something fixable from this app's code, and confirmed same-Wi-Fi and `--tunnel` don't change the outcome.
+
+OAuth works fine on iOS Expo Go. To test it on Android, build a development client instead (no local Android SDK/Android Studio needed — it builds in Expo's cloud):
+
+```bash
+npx eas build --profile development --platform android
+```
+
+Install the resulting APK on the device, then run the dev server with `npx expo start --dev-client` instead of plain `expo start`.
+
 ### Other setup steps
 
 - To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
