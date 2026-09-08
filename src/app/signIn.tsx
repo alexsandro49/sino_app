@@ -1,13 +1,10 @@
+import { FontAwesome } from "@expo/vector-icons";
 import { getQueryParams } from "expo-auth-session/build/QueryParams";
 import * as Linking from "expo-linking";
-import { Bell } from "lucide-react-native";
 import { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
   StyleSheet,
   TouchableOpacity,
   View,
@@ -15,8 +12,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as WebBrowser from "expo-web-browser";
 
+import { SinoIcon } from "@/components/sino-icon";
 import { ThemedText } from "@/components/themed-text";
-import { useTheme } from "@/hooks/use-theme";
 import { supabase } from "@/lib/supabase";
 
 WebBrowser.maybeCompleteAuthSession();
@@ -26,8 +23,13 @@ const PROVIDER_LABELS = {
   github: "GitHub",
 } as const;
 
+// Tokens do design system do Sino (paleta própria da marca, não o tema claro/escuro genérico do app).
+const SINO_PRIMARY = "#2563E8";
+const SINO_INK = "#232A38";
+const SINO_BORDER = "#B9C2D2";
+const SINO_WHITE = "#FFFFFF";
+
 export default function SignIn() {
-  const theme = useTheme();
   const [oauthLoading, setOauthLoading] = useState<"google" | "github" | null>(null);
 
   async function handleOAuthLogin(provider: "google" | "github") {
@@ -84,59 +86,51 @@ export default function SignIn() {
   }
 
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: theme.background }]}
-    >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.keyboardView}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-          bounces={false}
+    <SafeAreaView style={[styles.container, { backgroundColor: SINO_WHITE }]}>
+      <View style={styles.centeredGroup}>
+        <View style={styles.centerSection}>
+          <SinoIcon size={64} />
+          <ThemedText style={[styles.titleText, { color: SINO_INK }]}>Sino</ThemedText>
+        </View>
+
+        <View style={styles.bottomSection}>
+        <TouchableOpacity
+          style={[styles.pillButton, { backgroundColor: SINO_WHITE, borderColor: SINO_BORDER }]}
+          activeOpacity={0.7}
+          onPress={() => handleOAuthLogin("google")}
+          disabled={oauthLoading !== null}
         >
-          <View style={styles.cardContainer}>
-            <View style={styles.centerSection}>
-              <Bell size={64} strokeWidth={2} color={theme.text} />
-              <ThemedText style={styles.titleText}>Sino</ThemedText>
-            </View>
+          {oauthLoading === "google" ? (
+            <ActivityIndicator color={SINO_INK} />
+          ) : (
+            <>
+              <FontAwesome name="google" size={18} color={SINO_PRIMARY} />
+              <ThemedText style={[styles.buttonText, { color: SINO_INK }]}>
+                Continuar com Google
+              </ThemedText>
+            </>
+          )}
+        </TouchableOpacity>
 
-            <View style={styles.bottomSection}>
-              <TouchableOpacity
-                style={[styles.outlinedButton, { borderColor: theme.text }]}
-                activeOpacity={0.7}
-                onPress={() => handleOAuthLogin("google")}
-                disabled={oauthLoading !== null}
-              >
-                {oauthLoading === "google" ? (
-                  <ActivityIndicator color={theme.text} />
-                ) : (
-                  <ThemedText style={styles.buttonText}>
-                    Login com Google
-                  </ThemedText>
-                )}
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.outlinedButton, { borderColor: theme.text }]}
-                activeOpacity={0.7}
-                onPress={() => handleOAuthLogin("github")}
-                disabled={oauthLoading !== null}
-              >
-                {oauthLoading === "github" ? (
-                  <ActivityIndicator color={theme.text} />
-                ) : (
-                  <ThemedText style={styles.buttonText}>
-                    Login com Github
-                  </ThemedText>
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+        <TouchableOpacity
+          style={[styles.pillButton, { backgroundColor: SINO_WHITE, borderColor: SINO_BORDER }]}
+          activeOpacity={0.7}
+          onPress={() => handleOAuthLogin("github")}
+          disabled={oauthLoading !== null}
+        >
+          {oauthLoading === "github" ? (
+            <ActivityIndicator color={SINO_INK} />
+          ) : (
+            <>
+              <FontAwesome name="github" size={18} color={SINO_INK} />
+              <ThemedText style={[styles.buttonText, { color: SINO_INK }]}>
+                Continuar com GitHub
+              </ThemedText>
+            </>
+          )}
+        </TouchableOpacity>
+        </View>
+      </View>
     </SafeAreaView>
   );
 }
@@ -144,51 +138,40 @@ export default function SignIn() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingHorizontal: 20,
   },
-  keyboardView: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingBottom: 24,
-  },
-  cardContainer: {
-    flex: 1,
-    width: "100%",
-    maxWidth: 380,
-    alignSelf: "center",
-    justifyContent: "space-between",
-  },
-  centerSection: {
+  centeredGroup: {
     flex: 1,
     justifyContent: "center",
+    gap: 40,
+  },
+  centerSection: {
     alignItems: "center",
-    minHeight: 180,
-    paddingVertical: 32,
-    gap: 12,
+    gap: 10,
   },
   titleText: {
-    fontSize: 26,
+    fontSize: 34,
+    lineHeight: 40,
     fontWeight: "600",
     letterSpacing: 0.5,
   },
   bottomSection: {
     width: "100%",
     gap: 14,
-    paddingBottom: 8,
   },
-  outlinedButton: {
+  pillButton: {
+    flexDirection: "row",
     width: "100%",
     height: 52,
-    borderWidth: 1.5,
-    borderRadius: 14,
+    borderWidth: 1,
+    borderRadius: 10,
     justifyContent: "center",
     alignItems: "center",
+    gap: 10,
     paddingHorizontal: 16,
   },
   buttonText: {
-    fontSize: 16,
-    fontWeight: "500",
+    fontSize: 15,
+    fontWeight: "600",
   },
 });
