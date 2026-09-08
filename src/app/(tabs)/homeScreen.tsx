@@ -1,34 +1,34 @@
+import { useEffect, useState } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { CircleUserRound, Plus } from 'lucide-react-native';
+import { Plus } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 
 import { ThemedText } from '@/components/themed-text';
 import { useTheme } from '@/hooks/use-theme';
+import { supabase } from '@/lib/supabase';
 
-type HomeScreenProps = {
-  userName?: string;
-};
-
-export default function HomeScreen({
-  userName = '{userName}',
-}: HomeScreenProps) {
+export default function HomeScreen() {
   const theme = useTheme();
+  const router = useRouter();
+  const [userName, setUserName] = useState('');
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data.session) {
+        router.replace('/signIn');
+        return;
+      }
+      setUserName(data.session.user.user_metadata?.full_name ?? '');
+    });
+  }, [router]);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.header}>
         <ThemedText style={styles.greetingText}>
-          Olá, {userName}
+          {userName ? `Olá, ${userName}` : 'Olá'}
         </ThemedText>
-
-        <TouchableOpacity
-          style={styles.headerIconButton}
-          activeOpacity={0.7}
-          accessibilityLabel="configurações"
-          accessibilityRole="button"
-        >
-          <CircleUserRound size={32} color={theme.text} strokeWidth={2} />
-        </TouchableOpacity>
       </View>
 
       <View style={styles.centerContainer}>
@@ -73,13 +73,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 16,
     paddingBottom: 8,
-  },
-  headerIconButton: {
-    width: 44,
-    height: 44,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 12,
   },
   greetingText: {
     fontSize: 22,
