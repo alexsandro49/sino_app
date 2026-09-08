@@ -1,6 +1,7 @@
 import { FontAwesome } from "@expo/vector-icons";
 import { getQueryParams } from "expo-auth-session/build/QueryParams";
 import * as Linking from "expo-linking";
+import { Bell } from "lucide-react-native";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -12,7 +13,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as WebBrowser from "expo-web-browser";
 
-import { SinoIcon } from "@/components/sino-icon";
 import { ThemedText } from "@/components/themed-text";
 import { supabase } from "@/lib/supabase";
 
@@ -89,7 +89,7 @@ export default function SignIn() {
     <SafeAreaView style={[styles.container, { backgroundColor: SINO_WHITE }]}>
       <View style={styles.centeredGroup}>
         <View style={styles.centerSection}>
-          <SinoIcon size={64} />
+          <Bell size={52} strokeWidth={2} color={SINO_PRIMARY} />
           <ThemedText style={[styles.titleText, { color: SINO_INK }]}>Sino</ThemedText>
         </View>
 
