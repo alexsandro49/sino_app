@@ -1,39 +1,32 @@
-import {
-  DefaultTheme,
-  Stack,
-  ThemeProvider,
-  useRouter
-} from "expo-router";
+import { DefaultTheme, Stack, ThemeProvider, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 
 import { AnimatedSplashOverlay } from "@/components/animated-icon";
-import { supabase } from "@/lib/supabase";
+import { AuthProvider, useAuth } from "@/contexts/auth-context";
 
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
+function AuthRouter() {
   const router = useRouter();
+  const { session, loading, isProfileComplete } = useAuth();
 
   useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (session) {
-          const hasName = Boolean(session.user.user_metadata?.full_name);
-          router.replace(hasName ? "/homeScreen" : "/collectName");
-        }
-      },
-    );
+    if (loading || !session) return;
+    router.replace(isProfileComplete ? "/homeScreen" : "/collectName");
+  }, [loading, session, isProfileComplete, router]);
 
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, [router]);
+  return null;
+}
 
+export default function RootLayout() {
   return (
-    <ThemeProvider value={DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <Stack screenOptions={{ headerShown: false }} initialRouteName="signIn" />
-    </ThemeProvider>
+    <AuthProvider>
+      <ThemeProvider value={DefaultTheme}>
+        <AnimatedSplashOverlay />
+        <AuthRouter />
+        <Stack screenOptions={{ headerShown: false }} initialRouteName="signIn" />
+      </ThemeProvider>
+    </AuthProvider>
   );
 }

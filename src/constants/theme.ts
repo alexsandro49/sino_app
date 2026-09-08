@@ -26,6 +26,17 @@ export const Colors = {
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 
+// Paleta própria da marca Sino (do design system, não do tema claro/escuro genérico acima).
+// Usada em telas de auth/onboarding que devem ficar visualmente consistentes com a marca
+// independente do tema do sistema.
+export const SinoBrand = {
+  primary: '#2563E8',
+  ink: '#232A38',
+  border: '#B9C2D2',
+  textSecondary: '#626C7E',
+  white: '#FFFFFF',
+} as const;
+
 export const Fonts = Platform.select({
   ios: {
     /** iOS `UIFontDescriptorSystemDesignDefault` */
