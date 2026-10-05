@@ -31,9 +31,20 @@ export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 // independente do tema do sistema.
 export const SinoBrand = {
   primary: '#2563E8',
+  primarySoft: '#E3EAFB',
   ink: '#232A38',
   border: '#B9C2D2',
+  cardBorder: '#E7EAF1',
+  divider: '#E5E8EF',
   textSecondary: '#626C7E',
+  textTertiary: '#939BAA',
+  background: '#F8F9FC',
+  neutralSoft: '#F1F3F8',
+  up: '#0F6244',
+  upIcon: '#157A57',
+  upSoft: '#E7F1EC',
+  down: '#A33C31',
+  downSoft: '#FAEBE8',
   white: '#FFFFFF',
 } as const;
 

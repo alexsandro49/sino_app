@@ -7,31 +7,26 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "@/components/ui/button";
 import { ThemedText } from "@/components/themed-text";
 import { SinoBrand } from "@/constants/theme";
-import { signInWithProvider, type OAuthProvider } from "@/lib/oauth";
-
-const PROVIDER_LABELS: Record<OAuthProvider, string> = {
-  google: "Google",
-  github: "GitHub",
-};
+import { useAuth } from "@/contexts/auth-context";
 
 export default function SignIn() {
-  const [oauthLoading, setOauthLoading] = useState<OAuthProvider | null>(null);
+  const { signInWithGoogle } = useAuth();
+  const [loading, setLoading] = useState(false);
 
-  async function handleOAuthLogin(provider: OAuthProvider) {
-    const providerLabel = PROVIDER_LABELS[provider];
-    setOauthLoading(provider);
+  async function handleGoogleLogin() {
+    setLoading(true);
     try {
-      const { error } = await signInWithProvider(provider);
+      const { error } = await signInWithGoogle();
       if (error) {
-        Alert.alert(`Erro ao entrar com ${providerLabel}`, error);
+        Alert.alert("Erro ao entrar com Google", error);
       }
     } catch (err) {
       Alert.alert(
         "Erro inesperado",
-        err instanceof Error ? err.message : `Não foi possível entrar com ${providerLabel}.`,
+        err instanceof Error ? err.message : "Não foi possível entrar com Google.",
       );
     } finally {
-      setOauthLoading(null);
+      setLoading(false);
     }
   }
 
@@ -48,18 +43,8 @@ export default function SignIn() {
             variant="outlined"
             label="Continuar com Google"
             icon={<FontAwesome name="google" size={18} color={SinoBrand.primary} />}
-            onPress={() => handleOAuthLogin("google")}
-            loading={oauthLoading === "google"}
-            disabled={oauthLoading !== null}
-          />
-
-          <Button
-            variant="outlined"
-            label="Continuar com GitHub"
-            icon={<FontAwesome name="github" size={18} color={SinoBrand.ink} />}
-            onPress={() => handleOAuthLogin("github")}
-            loading={oauthLoading === "github"}
-            disabled={oauthLoading !== null}
+            onPress={handleGoogleLogin}
+            loading={loading}
           />
         </View>
       </View>

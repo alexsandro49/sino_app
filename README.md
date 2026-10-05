@@ -35,6 +35,34 @@ npm run reset-project
 
 This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
 
+## Backend (Firebase)
+
+The app talks to Firebase Auth for sign-in and to its own HTTP API (`functions/`, Cloud Functions) for market data. The app never calls brapi.dev directly, so the data source can change without republishing the app.
+
+```
+screens → hooks (src/hooks, src/contexts) → services (src/services) → Cloud Function `api` → brapi.dev
+```
+
+Setup:
+
+1. Copy `.env.example` to `.env` and fill it with the web app config from the Firebase console.
+2. Deploy the backend (requires the Blaze plan):
+
+   ```bash
+   npx firebase-tools login
+   npx firebase-tools use <project-id>
+   npx firebase-tools functions:secrets:set BRAPI_TOKEN
+   npm --prefix functions install
+   npx firebase-tools deploy --only functions,hosting
+   ```
+
+Google sign-in opens `firebase-hosting/google-sign-in.html` (served from the project's auth domain) in a browser session, which returns a Google ID token to the app. This works in Expo Go without native modules.
+
+API routes (all require `Authorization: Bearer <Firebase ID token>`):
+
+- `GET /tickers?q=PET` → `{ tickers: [{ symbol, name }] }`
+- `GET /quotes?symbols=PETR4,VALE3` → `{ quotes: [{ symbol, name, price, changePercent, previousClose, updatedAt }], failed: [] }`
+
 ### Known issue: Google/GitHub login doesn't work in Expo Go on Android
 
 Testing the Google/GitHub sign-in on **Expo Go on Android** fails with `Failed to download remote update` after authorizing and returning from the browser. This is a confirmed, unresolved limitation of Expo Go itself — it doesn't reliably deep-link back into the running session on Android (see [expo/expo#22572](https://github.com/expo/expo/issues/22572), [#27500](https://github.com/expo/expo/issues/27500), [#34187](https://github.com/expo/expo/issues/34187)). It's not something fixable from this app's code, and confirmed same-Wi-Fi and `--tunnel` don't change the outcome.

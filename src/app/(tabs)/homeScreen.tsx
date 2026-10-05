@@ -1,53 +1,90 @@
-import { useEffect } from 'react';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Plus } from 'lucide-react-native';
-import { useRouter } from 'expo-router';
+import { useRouter } from "expo-router";
+import { Plus } from "lucide-react-native";
+import { Alert, FlatList, RefreshControl, StyleSheet, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { ThemedText } from '@/components/themed-text';
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/contexts/auth-context';
-import { useTheme } from '@/hooks/use-theme';
+import { MarketStatusBadge } from "@/components/market-status-badge";
+import { ThemedText } from "@/components/themed-text";
+import { TickerRow } from "@/components/ticker-row";
+import { Button } from "@/components/ui/button";
+import { SinoBrand } from "@/constants/theme";
+import { useAuth } from "@/contexts/auth-context";
+import { useWatchlist } from "@/contexts/watchlist-context";
+import { useQuotes } from "@/hooks/use-quotes";
+import type { Ticker } from "@/services/market";
+import { isMarketOpen } from "@/services/market";
 
 export default function HomeScreen() {
-  const theme = useTheme();
   const router = useRouter();
-  const { session, loading } = useAuth();
+  const { user } = useAuth();
+  const { tickers, loading: watchlistLoading, unfollow } = useWatchlist();
+  const { quotes, loading: quotesLoading, error, refresh } = useQuotes(
+    tickers.map((ticker) => ticker.symbol),
+  );
 
-  useEffect(() => {
-    if (!loading && !session) {
-      router.replace('/signIn');
-    }
-  }, [loading, session, router]);
+  const marketOpen = isMarketOpen();
+  const firstName = user?.name?.split(" ")[0];
 
-  const userName = session?.user.user_metadata?.full_name ?? '';
+  function openAddTicker() {
+    router.push("/addTicker");
+  }
+
+  function confirmUnfollow(ticker: Ticker) {
+    Alert.alert(`Deixar de seguir ${ticker.symbol}?`, "Você para de receber a variação dele.", [
+      { text: "Cancelar", style: "cancel" },
+      { text: "Deixar de seguir", style: "destructive", onPress: () => unfollow(ticker.symbol) },
+    ]);
+  }
+
+  const isEmpty = !watchlistLoading && tickers.length === 0;
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+    <SafeAreaView edges={["top"]} style={styles.container}>
       <View style={styles.header}>
-        <ThemedText style={styles.greetingText}>
-          {userName ? `Olá, ${userName}` : 'Olá'}
-        </ThemedText>
+        <ThemedText style={styles.greetingText}>{firstName ? `Olá, ${firstName}` : "Olá"}</ThemedText>
+        {!isEmpty && <MarketStatusBadge open={marketOpen} />}
       </View>
 
-      <View style={styles.centerContainer}>
-        <ThemedText style={styles.emptyMessageText}>
-          Você não está{'\n'}rastreando nenhum ticket
-        </ThemedText>
+      {isEmpty ? (
+        <View style={styles.emptyContainer}>
+          <ThemedText style={styles.emptyTitle}>Nenhum ticket ainda</ThemedText>
+          <ThemedText style={styles.emptyMessage}>
+            Adicione as ações que você quer acompanhar. No fim do pregão o Sino te avisa.
+          </ThemedText>
+          <Button label="+ Cadastrar o primeiro" style={styles.emptyButton} onPress={openAddTicker} />
+        </View>
+      ) : (
+        <FlatList
+          data={tickers}
+          keyExtractor={(ticker) => ticker.symbol}
+          contentContainerStyle={styles.list}
+          refreshControl={<RefreshControl refreshing={quotesLoading} onRefresh={refresh} />}
+          renderItem={({ item }) => (
+            <TickerRow ticker={item} quote={quotes[item.symbol]} onLongPress={() => confirmUnfollow(item)} />
+          )}
+          ListFooterComponent={
+            <ThemedText style={styles.footnote}>
+              {error
+                ? error
+                : marketOpen
+                  ? "Variação desde o fechamento anterior. O pregão fecha às 18:00. Puxe pra atualizar."
+                  : "Variação final do último pregão em relação ao fechamento anterior."}
+            </ThemedText>
+          }
+        />
+      )}
 
-        <Button label="+ Cadastrar o primeiro" style={styles.primaryActionButton} />
-      </View>
-
-      <View style={styles.fabContainer}>
+      {!isEmpty && (
         <TouchableOpacity
           style={styles.fabButton}
-          activeOpacity={0.7}
+          activeOpacity={0.8}
+          onPress={openAddTicker}
           accessibilityLabel="Cadastrar ticket"
           accessibilityRole="button"
         >
-          <Plus size={24} color="#FFFFFF" strokeWidth={2.5} />
+          <Plus size={25} color={SinoBrand.white} strokeWidth={2} />
         </TouchableOpacity>
-      </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -55,55 +92,69 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 24,
+    backgroundColor: SinoBrand.background,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: 16,
-    paddingBottom: 8,
+    paddingTop: 22,
+    paddingHorizontal: 24,
+    paddingBottom: 14,
+    gap: 8,
   },
   greetingText: {
-    fontSize: 22,
-    fontWeight: '700',
-    letterSpacing: 0.2,
+    fontSize: 25,
+    lineHeight: 30,
+    fontWeight: "600",
+    letterSpacing: -0.75,
+    color: SinoBrand.ink,
   },
-  centerContainer: {
+  list: {
+    paddingHorizontal: 18,
+    paddingBottom: 120,
+    gap: 8,
+  },
+  footnote: {
+    marginTop: 6,
+    paddingHorizontal: 8,
+    fontSize: 12.5,
+    lineHeight: 19,
+    fontWeight: "400",
+    color: SinoBrand.textTertiary,
+  },
+  emptyContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    gap: 16,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 42,
+    gap: 8,
   },
-  emptyMessageText: {
-    fontSize: 16,
+  emptyTitle: {
+    fontSize: 19,
+    lineHeight: 24,
+    fontWeight: "600",
+    color: SinoBrand.ink,
+  },
+  emptyMessage: {
+    fontSize: 14.5,
     lineHeight: 22,
-    textAlign: 'center',
-    fontWeight: '500',
+    fontWeight: "400",
+    textAlign: "center",
+    color: SinoBrand.textSecondary,
   },
-  primaryActionButton: {
-    width: 'auto',
-    paddingHorizontal: 24,
-  },
-  fabContainer: {
-    position: 'absolute',
-    bottom: 32,
-    right: 28,
+  emptyButton: {
+    width: "auto",
+    height: 46,
+    marginTop: 10,
+    paddingHorizontal: 18,
   },
   fabButton: {
-    width: 52,
-    height: 52,
-    backgroundColor: '#27374D',
-    borderWidth: 1.5,
-    borderColor: '#000000',
-    borderRadius: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
+    position: "absolute",
+    right: 22,
+    bottom: 24,
+    width: 58,
+    height: 58,
+    borderRadius: 17,
+    backgroundColor: SinoBrand.primary,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

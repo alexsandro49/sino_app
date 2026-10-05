@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sino · Entrar com Google</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8f9fc;
+        color: #626c7e;
+        font: 15px/1.5 -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <p id="status">Conectando com o Google…</p>
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+      import {
+        GoogleAuthProvider,
+        getAuth,
+        getRedirectResult,
+        signInWithRedirect,
+        signOut,
+      } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+
+      const ALLOWED_REDIRECT_PREFIXES = ["exp://", "sinoapp://"];
+      const REDIRECT_STORAGE_KEY = "sino:redirect";
+
+      function isAllowedRedirect(url) {
+        return ALLOWED_REDIRECT_PREFIXES.some((prefix) => url.startsWith(prefix));
+      }
+
+      function returnToApp(redirect, params) {
+        const separator = redirect.includes("?") ? "&" : "?";
+        window.location.replace(`${redirect}${separator}${new URLSearchParams(params)}`);
+      }
+
+      const statusElement = document.getElementById("status");
+      const config = await (await fetch("/__/firebase/init.json")).json();
+      const auth = getAuth(initializeApp({ ...config, authDomain: window.location.host }));
+
+      const requestedRedirect = new URLSearchParams(window.location.search).get("redirect");
+      if (requestedRedirect && isAllowedRedirect(requestedRedirect)) {
+        sessionStorage.setItem(REDIRECT_STORAGE_KEY, requestedRedirect);
+      }
+
+      const redirect = sessionStorage.getItem(REDIRECT_STORAGE_KEY);
+
+      if (!redirect) {
+        statusElement.textContent = "Abra esta página pelo app Sino.";
+      } else {
+        try {
+          const result = await getRedirectResult(auth);
+
+          if (result) {
+            const idToken = GoogleAuthProvider.credentialFromResult(result)?.idToken;
+            await signOut(auth);
+            sessionStorage.removeItem(REDIRECT_STORAGE_KEY);
+            returnToApp(redirect, idToken ? { id_token: idToken } : { error: "missing_token" });
+          } else {
+            const provider = new GoogleAuthProvider();
+            provider.setCustomParameters({ prompt: "select_account" });
+            await signInWithRedirect(auth, provider);
+          }
+        } catch (error) {
+          sessionStorage.removeItem(REDIRECT_STORAGE_KEY);
+          returnToApp(redirect, { error: error?.code ?? "unknown" });
+        }
+      }
+    </script>
+  </body>
+</html>

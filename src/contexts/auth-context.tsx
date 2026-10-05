@@ -1,58 +1,45 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import type { Session } from "@supabase/supabase-js";
 
-import { supabase } from "@/lib/supabase";
-
-type UpdateResult = {
-  error: string | null;
-};
+import * as authService from "@/services/auth";
+import type { AppUser, AuthResult } from "@/services/auth";
 
 type AuthContextValue = {
-  session: Session | null;
-  /** Whether we already know the initial session state (vs. still checking AsyncStorage). */
+  user: AppUser | null;
   loading: boolean;
-  /** A signed-in user still needs a display name before they can use the app. */
   isProfileComplete: boolean;
+  signInWithGoogle: () => Promise<AuthResult>;
   signOut: () => Promise<void>;
-  updateDisplayName: (name: string) => Promise<UpdateResult>;
+  updateDisplayName: (name: string) => Promise<AuthResult>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
+    return authService.subscribeToUser((newUser) => {
+      setUser(newUser);
       setLoading(false);
     });
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      setSession(newSession);
-      setLoading(false);
-    });
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
   }, []);
 
-  async function signOut() {
-    await supabase.auth.signOut();
-  }
-
-  async function updateDisplayName(name: string): Promise<UpdateResult> {
-    const { error } = await supabase.auth.updateUser({ data: { full_name: name } });
-    return { error: error?.message ?? null };
+  async function updateDisplayName(name: string): Promise<AuthResult> {
+    try {
+      setUser(await authService.updateDisplayName(name));
+      return { error: null };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : "Não foi possível salvar o nome." };
+    }
   }
 
   const value: AuthContextValue = {
-    session,
+    user,
     loading,
-    isProfileComplete: Boolean(session?.user.user_metadata?.full_name),
-    signOut,
+    isProfileComplete: Boolean(user?.name),
+    signInWithGoogle: authService.signInWithGoogle,
+    signOut: authService.signOut,
     updateDisplayName,
   };
 

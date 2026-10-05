@@ -46,3 +46,8 @@ example
 .env*
 
 .history
+# Firebase
+.firebase/
+firebase-debug.log
+functions/lib/
+!.env.example

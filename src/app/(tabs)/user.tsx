@@ -11,10 +11,10 @@ import { useTheme } from "@/hooks/use-theme";
 export default function User() {
   const theme = useTheme();
   const router = useRouter();
-  const { session, signOut } = useAuth();
+  const { user, signOut } = useAuth();
 
-  const name = session?.user.user_metadata?.full_name ?? "";
-  const email = session?.user.email ?? "";
+  const name = user?.name ?? "";
+  const email = user?.email ?? "";
 
   async function handleLogout() {
     await signOut();
