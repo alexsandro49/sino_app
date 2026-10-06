@@ -6,6 +6,8 @@ import { logger } from "firebase-functions/logger";
 import { defineSecret } from "firebase-functions/params";
 
 import { getQuotes, searchTickers } from "./brapi.js";
+import { sendSummaryToUser } from "./notifications.js";
+import { addPushToken, getProfile, isNotificationMode, removePushTokens, setNotificationMode } from "./profile.js";
 import { addToWatchlist, listWatchlist, removeFromWatchlist, type WatchlistItem } from "./watchlist.js";
 
 initializeApp();
@@ -20,6 +22,7 @@ const MAX_QUERY_LENGTH = 30;
 const MAX_NAME_LENGTH = 120;
 const SEARCH_LIMIT = 15;
 const WATCHLIST_ITEM_PATH = /^\/watchlist\/([A-Za-z0-9]+)$/;
+const PUSH_TOKEN_PATTERN = /^Expo(nent)?PushToken\[[A-Za-z0-9_-]+\]$/;
 const LOGO_URL_PATTERN = /^https:\/\/icons\.brapi\.dev\/icons\/[A-Za-z0-9]+\.svg$/;
 
 async function authenticatedUserId(req: Request): Promise<string | null> {
@@ -131,6 +134,47 @@ export const api = onRequest({ secrets: [brapiToken], cors: true }, async (req, 
 
       await removeFromWatchlist(userId, symbol);
       res.json({ tickers: await listWatchlist(userId) });
+      return;
+    }
+
+    if (req.method === "GET" && req.path === "/me/preferences") {
+      const { notificationMode } = await getProfile(userId);
+      res.json({ notificationMode });
+      return;
+    }
+
+    if (req.method === "PUT" && req.path === "/me/preferences") {
+      const mode = req.body?.notificationMode;
+
+      if (!isNotificationMode(mode)) {
+        res.status(400).json({ error: "Tipo de notificação inválido." });
+        return;
+      }
+
+      await setNotificationMode(userId, mode);
+      res.json({ notificationMode: mode });
+      return;
+    }
+
+    if ((req.method === "POST" || req.method === "DELETE") && req.path === "/me/push-tokens") {
+      const token = typeof req.body?.token === "string" ? req.body.token : "";
+
+      if (!PUSH_TOKEN_PATTERN.test(token)) {
+        res.status(400).json({ error: "Token de notificação inválido." });
+        return;
+      }
+
+      if (req.method === "POST") {
+        await addPushToken(userId, token);
+      } else {
+        await removePushTokens(userId, [token]);
+      }
+      res.status(204).send();
+      return;
+    }
+
+    if (req.method === "POST" && req.path === "/me/summary") {
+      res.json(await sendSummaryToUser(userId, brapiToken.value()));
       return;
     }
 

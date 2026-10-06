@@ -32,6 +32,10 @@ async function apiRequest<T>(method: string, path: string, options: RequestOptio
     body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
   });
 
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
   const body = await response.json().catch(() => null);
 
   if (!response.ok) {
@@ -49,6 +53,10 @@ export function apiPost<T>(path: string, body: unknown): Promise<T> {
   return apiRequest<T>("POST", path, { body });
 }
 
-export function apiDelete<T>(path: string): Promise<T> {
-  return apiRequest<T>("DELETE", path);
+export function apiPut<T>(path: string, body: unknown): Promise<T> {
+  return apiRequest<T>("PUT", path, { body });
+}
+
+export function apiDelete<T>(path: string, body?: unknown): Promise<T> {
+  return apiRequest<T>("DELETE", path, { body });
 }

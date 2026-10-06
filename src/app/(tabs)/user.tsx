@@ -1,41 +1,106 @@
 import Constants from "expo-constants";
-import { LogOut } from "lucide-react-native";
-import { Alert, StyleSheet, View } from "react-native";
+import * as Haptics from "expo-haptics";
+import { Bell, BellOff, BellRing, List, LogOut, Send, TriangleAlert } from "lucide-react-native";
+import { useState } from "react";
+import { Alert, Linking, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { RadioCard } from "@/components/radio-card";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { SinoBrand, SinoFonts, SinoRadius } from "@/constants/theme";
 import { useAuth } from "@/contexts/auth-context";
 import { useWatchlist } from "@/contexts/watchlist-context";
+import { useNotificationSettings } from "@/hooks/use-notification-settings";
+import { sendSummaryNow, unregisterDevice, type NotificationMode, type SummaryResult } from "@/services/notifications";
+
+const MODE_OPTIONS = [
+  {
+    mode: "per_ticker",
+    icon: List,
+    title: "Uma por ticket",
+    description: "Uma notificação para cada ação, com a variação do dia.",
+  },
+  {
+    mode: "summary",
+    icon: Bell,
+    title: "Minimalista",
+    description: "Só um aviso de que o resumo está pronto. Você abre o app pra ver.",
+  },
+  {
+    mode: "none",
+    icon: BellOff,
+    title: "Nenhuma",
+    description: "Desativa as notificações do Sino.",
+  },
+] as const satisfies readonly { mode: NotificationMode; icon: unknown; title: string; description: string }[];
+
+const SKIPPED_MESSAGES: Record<Extract<SummaryResult, { status: "skipped" }>["reason"], string> = {
+  notifications_off: "Suas notificações estão desligadas. Escolha um dos tipos acima.",
+  no_device: "Este iPhone ainda não está registrado. Permita as notificações e tente de novo.",
+  empty_watchlist: "Sua carteira está vazia. Adicione um ticker antes de testar.",
+  no_quotes: "Não conseguimos as cotações agora. Tente de novo em instantes.",
+};
 
 export default function User() {
   const { user, signOut } = useAuth();
   const { tickers } = useWatchlist();
+  const { mode, permission, saving, error, changeMode, enableOnDevice } = useNotificationSettings();
+  const [sending, setSending] = useState(false);
 
   const name = user?.name ?? "Sem nome";
   const initial = name.trim().charAt(0).toUpperCase() || "?";
   const following =
     tickers.length === 0
-      ? "Nenhum ticker na carteira"
+      ? "Nenhum ticker"
       : tickers.length === 1
-        ? "1 ticker na carteira"
-        : `${tickers.length} tickers na carteira`;
+        ? "1 ticker"
+        : `${tickers.length} tickers`;
+  const notificationsOn = mode !== null && mode !== "none";
 
   function confirmSignOut() {
     Alert.alert("Sair da conta?", "Sua carteira fica salva e volta quando você entrar de novo.", [
       { text: "Cancelar", style: "cancel" },
-      { text: "Sair", style: "destructive", onPress: signOut },
+      {
+        text: "Sair",
+        style: "destructive",
+        onPress: async () => {
+          await unregisterDevice().catch(() => null);
+          await signOut();
+        },
+      },
     ]);
+  }
+
+  async function handleSendNow() {
+    setSending(true);
+    try {
+      const result = await sendSummaryNow();
+      if (result.status === "sent") {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Alert.alert(
+          "Resumo enviado",
+          result.notifications === 1
+            ? "Sua notificação chega em instantes."
+            : `${result.notifications} notificações chegam em instantes.`,
+        );
+      } else {
+        Alert.alert("Não deu pra enviar", SKIPPED_MESSAGES[result.reason]);
+      }
+    } catch (err) {
+      Alert.alert("Não deu pra enviar", err instanceof Error ? err.message : "Tente de novo.");
+    } finally {
+      setSending(false);
+    }
   }
 
   return (
     <SafeAreaView edges={["top"]} style={styles.container}>
-      <View style={styles.header}>
-        <Text variant="title">Perfil</Text>
-      </View>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <Text variant="title" style={styles.title}>
+          Perfil
+        </Text>
 
-      <View style={styles.content}>
         <View style={styles.card}>
           <View style={styles.avatar}>
             <Text tone="primary" style={styles.avatarText}>
@@ -52,14 +117,84 @@ export default function User() {
               </Text>
             ) : null}
           </View>
+          <Text variant="caption" tone="tertiary">
+            {following}
+          </Text>
         </View>
 
-        <View style={styles.infoRow}>
-          <Text variant="label" tone="secondary" style={styles.infoLabel}>
-            Carteira
+        <View style={styles.section}>
+          <Text variant="overline" tone="tertiary" style={styles.sectionLabel}>
+            Notificações
           </Text>
-          <Text variant="label" style={styles.infoValue}>
-            {following}
+
+          {MODE_OPTIONS.map((option) => (
+            <RadioCard
+              key={option.mode}
+              icon={option.icon}
+              title={option.title}
+              description={option.description}
+              selected={mode === option.mode}
+              disabled={mode === null || saving}
+              onPress={() => changeMode(option.mode)}
+            />
+          ))}
+
+          {notificationsOn && permission === "undetermined" ? (
+            <Pressable
+              onPress={enableOnDevice}
+              disabled={saving}
+              accessibilityRole="button"
+              style={({ pressed }) => [styles.notice, styles.noticeAction, pressed && styles.noticePressed]}
+            >
+              <BellRing size={17} strokeWidth={1.8} color={SinoBrand.primary} />
+              <Text variant="label" tone="primary" style={styles.noticeText}>
+                Permitir notificações neste iPhone
+              </Text>
+            </Pressable>
+          ) : null}
+
+          {notificationsOn && permission === "denied" ? (
+            <Pressable
+              onPress={() => Linking.openSettings()}
+              accessibilityRole="button"
+              style={({ pressed }) => [styles.notice, styles.noticeWarning, pressed && styles.noticePressed]}
+            >
+              <TriangleAlert size={17} strokeWidth={1.8} color={SinoBrand.down} />
+              <Text variant="label" tone="down" style={styles.noticeText}>
+                As notificações estão bloqueadas no iPhone. Toque pra abrir os Ajustes.
+              </Text>
+            </Pressable>
+          ) : null}
+
+          {notificationsOn && permission === "unsupported" ? (
+            <View style={styles.notice}>
+              <Text variant="label" tone="secondary" style={styles.noticeText}>
+                Notificações só chegam num celular de verdade, não no simulador ou no navegador.
+              </Text>
+            </View>
+          ) : null}
+
+          {error ? (
+            <Text variant="caption" tone="down" style={styles.sectionLabel}>
+              {error}
+            </Text>
+          ) : null}
+        </View>
+
+        <View style={styles.section}>
+          <Text variant="overline" tone="tertiary" style={styles.sectionLabel}>
+            Testar agora
+          </Text>
+          <Button
+            variant="secondary"
+            label="Enviar resumo agora"
+            icon={<Send size={16} strokeWidth={1.8} color={SinoBrand.ink} />}
+            loading={sending}
+            disabled={!notificationsOn}
+            onPress={handleSendNow}
+          />
+          <Text variant="caption" tone="tertiary" style={styles.sectionLabel}>
+            Manda já o aviso que você recebe no fim do pregão, com as cotações de agora.
           </Text>
         </View>
 
@@ -75,7 +210,7 @@ export default function User() {
             Sino {Constants.expoConfig?.version ?? ""}
           </Text>
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -85,15 +220,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: SinoBrand.background,
   },
-  header: {
-    paddingTop: 22,
-    paddingHorizontal: 24,
-  },
   content: {
-    flex: 1,
-    paddingTop: 18,
+    flexGrow: 1,
+    paddingTop: 22,
     paddingHorizontal: 18,
-    gap: 12,
+    paddingBottom: 16,
+    gap: 20,
+  },
+  title: {
+    paddingHorizontal: 6,
   },
   card: {
     flexDirection: "row",
@@ -123,7 +258,13 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 2,
   },
-  infoRow: {
+  section: {
+    gap: 8,
+  },
+  sectionLabel: {
+    paddingHorizontal: 6,
+  },
+  notice: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
@@ -132,16 +273,21 @@ const styles = StyleSheet.create({
     borderRadius: SinoRadius.control,
     backgroundColor: SinoBrand.neutralMuted,
   },
-  infoLabel: {
+  noticeAction: {
+    backgroundColor: SinoBrand.primaryTint,
+  },
+  noticeWarning: {
+    backgroundColor: SinoBrand.downSoft,
+  },
+  noticePressed: {
+    opacity: 0.8,
+  },
+  noticeText: {
     flex: 1,
     fontFamily: SinoFonts.regular,
   },
-  infoValue: {
-    fontFamily: SinoFonts.semibold,
-  },
   footer: {
     marginTop: "auto",
-    paddingBottom: 16,
     alignItems: "center",
     gap: 4,
   },

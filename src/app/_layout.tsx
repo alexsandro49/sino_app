@@ -10,6 +10,7 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
+import { NotificationRouter } from "@/components/notification-router";
 import { SinoBrand } from "@/constants/theme";
 import { AuthProvider, useAuth } from "@/contexts/auth-context";
 import { WatchlistProvider } from "@/contexts/watchlist-context";
@@ -65,6 +66,7 @@ export default function RootLayout() {
           <ThemeProvider value={navigationTheme}>
             <StatusBar style="dark" />
             <AuthRouter />
+            <NotificationRouter />
             <Stack
               screenOptions={{ headerShown: false, contentStyle: { backgroundColor: SinoBrand.background } }}
               initialRouteName="signIn"

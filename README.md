@@ -65,6 +65,10 @@ API routes (all require `Authorization: Bearer <Firebase ID token>`):
 - `GET /watchlist` → `{ tickers: [{ symbol, name, logoUrl }] }`
 - `POST /watchlist` with `{ tickers: [{ symbol, name, logoUrl }] }` → `{ tickers }` (only `icons.brapi.dev` logo URLs are stored)
 - `DELETE /watchlist/:symbol` → `{ tickers }`
+- `GET /me/preferences` → `{ notificationMode }` (`per_ticker`, `summary` or `none`)
+- `PUT /me/preferences` with `{ notificationMode }` → `{ notificationMode }`
+- `POST /me/push-tokens` / `DELETE /me/push-tokens` with `{ token }` (Expo push token) → `204`
+- `POST /me/summary` → sends the end-of-day summary to the current user right away (demo trigger until the daily schedule exists)
 
 ### Known issue: Google/GitHub login doesn't work in Expo Go on Android
 
