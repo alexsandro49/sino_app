@@ -61,7 +61,10 @@ Google sign-in opens `firebase-hosting/google-sign-in.html` (served from the pro
 API routes (all require `Authorization: Bearer <Firebase ID token>`):
 
 - `GET /tickers?q=PET` → `{ tickers: [{ symbol, name }] }`
-- `GET /quotes?symbols=PETR4,VALE3` → `{ quotes: [{ symbol, name, price, changePercent, previousClose, updatedAt }], failed: [] }`
+- `GET /quotes?symbols=PETR4,VALE3` → `{ quotes: [{ symbol, name, logoUrl, price, changePercent, previousClose, open, dayLow, dayHigh, volume, marketCap, fiftyTwoWeekLow, fiftyTwoWeekHigh, updatedAt }], failed: [] }`
+- `GET /watchlist` → `{ tickers: [{ symbol, name }] }`
+- `POST /watchlist` with `{ tickers: [{ symbol, name }] }` → `{ tickers }`
+- `DELETE /watchlist/:symbol` → `{ tickers }`
 
 ### Known issue: Google/GitHub login doesn't work in Expo Go on Android
 

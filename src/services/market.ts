@@ -8,11 +8,23 @@ export type Ticker = {
 export type Quote = {
   symbol: string;
   name: string;
+  logoUrl: string | null;
   price: number;
   changePercent: number;
   previousClose: number | null;
+  open: number | null;
+  dayLow: number | null;
+  dayHigh: number | null;
+  volume: number | null;
+  marketCap: number | null;
+  fiftyTwoWeekLow: number | null;
+  fiftyTwoWeekHigh: number | null;
   updatedAt: string;
 };
+
+export function googleFinanceUrl(symbol: string): string {
+  return `https://www.google.com/finance/quote/${encodeURIComponent(symbol)}:BVMF?hl=pt`;
+}
 
 export async function searchTickers(query: string): Promise<Ticker[]> {
   const { tickers } = await apiGet<{ tickers: Ticker[] }>("/tickers", { q: query });

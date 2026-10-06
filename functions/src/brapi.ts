@@ -10,9 +10,17 @@ export type TickerSummary = {
 export type Quote = {
   symbol: string;
   name: string;
+  logoUrl: string | null;
   price: number;
   changePercent: number;
   previousClose: number | null;
+  open: number | null;
+  dayLow: number | null;
+  dayHigh: number | null;
+  volume: number | null;
+  marketCap: number | null;
+  fiftyTwoWeekLow: number | null;
+  fiftyTwoWeekHigh: number | null;
   updatedAt: string;
 };
 
@@ -34,7 +42,15 @@ type BrapiQuoteResponse = {
       regularMarketPrice?: number;
       regularMarketChangePercent?: number;
       regularMarketPreviousClose?: number;
+      regularMarketOpen?: number;
+      regularMarketDayLow?: number;
+      regularMarketDayHigh?: number;
+      regularMarketVolume?: number;
+      marketCap?: number;
+      fiftyTwoWeekLow?: number;
+      fiftyTwoWeekHigh?: number;
       regularMarketTime?: string;
+      logourl?: string;
     };
   }[];
 };
@@ -84,9 +100,17 @@ async function fetchQuote(symbol: string, token: string): Promise<Quote> {
   const quote: Quote = {
     symbol,
     name: data.longName ?? data.shortName ?? symbol,
+    logoUrl: data.logourl ?? null,
     price: data.regularMarketPrice,
     changePercent: data.regularMarketChangePercent,
     previousClose: data.regularMarketPreviousClose ?? null,
+    open: data.regularMarketOpen ?? null,
+    dayLow: data.regularMarketDayLow ?? null,
+    dayHigh: data.regularMarketDayHigh ?? null,
+    volume: data.regularMarketVolume ?? null,
+    marketCap: data.marketCap ?? null,
+    fiftyTwoWeekLow: data.fiftyTwoWeekLow ?? null,
+    fiftyTwoWeekHigh: data.fiftyTwoWeekHigh ?? null,
     updatedAt: data.regularMarketTime ?? new Date().toISOString(),
   };
 

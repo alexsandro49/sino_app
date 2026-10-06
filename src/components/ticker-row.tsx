@@ -4,54 +4,35 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { Text } from "@/components/ui/text";
 import { SinoBrand, SinoRadius } from "@/constants/theme";
 import type { Quote, Ticker } from "@/services/market";
+import { formatChange, formatPrice, trendOf } from "@/utils/format";
 
 type TickerRowProps = {
   ticker: Ticker;
   quote?: Quote;
   pending?: boolean;
+  onPress?: () => void;
   onLongPress?: () => void;
 };
 
-const percentFormatter = new Intl.NumberFormat("pt-BR", {
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
+const trendStyle = {
+  flat: { Icon: Minus, tone: "secondary", iconColor: SinoBrand.textSecondary, background: SinoBrand.neutralSoft },
+  up: { Icon: TrendingUp, tone: "up", iconColor: SinoBrand.upIcon, background: SinoBrand.upSoft },
+  down: { Icon: TrendingDown, tone: "down", iconColor: SinoBrand.down, background: SinoBrand.downSoft },
+} as const;
 
-const priceFormatter = new Intl.NumberFormat("pt-BR", {
-  style: "currency",
-  currency: "BRL",
-});
-
-const FLAT_THRESHOLD = 0.005;
-
-function trendOf(changePercent: number) {
-  if (Math.abs(changePercent) < FLAT_THRESHOLD) {
-    return { Icon: Minus, tone: "secondary", iconColor: SinoBrand.textSecondary, background: SinoBrand.neutralSoft } as const;
-  }
-  if (changePercent > 0) {
-    return { Icon: TrendingUp, tone: "up", iconColor: SinoBrand.upIcon, background: SinoBrand.upSoft } as const;
-  }
-  return { Icon: TrendingDown, tone: "down", iconColor: SinoBrand.down, background: SinoBrand.downSoft } as const;
-}
-
-function formatChange(changePercent: number) {
-  if (Math.abs(changePercent) < FLAT_THRESHOLD) return "0,00%";
-  const sign = changePercent > 0 ? "+" : "−";
-  return `${sign}${percentFormatter.format(Math.abs(changePercent))}%`;
-}
-
-export function TickerRow({ ticker, quote, pending = false, onLongPress }: TickerRowProps) {
-  const trend = quote ? trendOf(quote.changePercent) : null;
+export function TickerRow({ ticker, quote, pending = false, onPress, onLongPress }: TickerRowProps) {
+  const trend = quote ? trendStyle[trendOf(quote.changePercent)] : null;
 
   return (
     <Pressable
+      onPress={onPress}
       onLongPress={onLongPress}
       delayLongPress={350}
       accessibilityRole="button"
       accessibilityLabel={
-        quote ? `${ticker.symbol}, ${formatChange(quote.changePercent)}, ${priceFormatter.format(quote.price)}` : ticker.symbol
+        quote ? `${ticker.symbol}, ${formatChange(quote.changePercent)}, ${formatPrice(quote.price)}` : ticker.symbol
       }
-      accessibilityHint="Segure para deixar de seguir"
+      accessibilityHint="Toque para ver detalhes. Segure para deixar de seguir."
       style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
     >
       <View style={[styles.iconBox, { backgroundColor: trend?.background ?? SinoBrand.neutralSoft }]}>
@@ -71,7 +52,7 @@ export function TickerRow({ ticker, quote, pending = false, onLongPress }: Ticke
             {formatChange(quote.changePercent)}
           </Text>
           <Text variant="caption" tone="tertiary">
-            {priceFormatter.format(quote.price)}
+            {formatPrice(quote.price)}
           </Text>
         </View>
       ) : pending ? (

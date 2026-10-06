@@ -77,6 +77,16 @@ export default function RootLayout() {
                 contentStyle: { backgroundColor: SinoBrand.white },
               }}
             />
+            <Stack.Screen
+              name="ticker/[symbol]"
+              options={{
+                presentation: "formSheet",
+                sheetAllowedDetents: [0.88],
+                sheetGrabberVisible: true,
+                sheetCornerRadius: 22,
+                contentStyle: { backgroundColor: SinoBrand.white },
+              }}
+            />
           </Stack>
         </ThemeProvider>
       </WatchlistProvider>

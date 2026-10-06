@@ -118,6 +118,7 @@ export default function HomeScreen() {
               ticker={item}
               quote={quotes[item.symbol]}
               pending={quotesLoading}
+              onPress={() => router.push({ pathname: "/ticker/[symbol]", params: { symbol: item.symbol } })}
               onLongPress={() => confirmUnfollow(item)}
             />
           )}
