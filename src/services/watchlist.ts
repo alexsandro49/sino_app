@@ -10,8 +10,8 @@ export async function fetchWatchlist(): Promise<Ticker[]> {
   return tickers;
 }
 
-export async function addToWatchlist(ticker: Ticker): Promise<Ticker[]> {
-  const { tickers } = await apiPost<WatchlistResponse>("/watchlist", ticker);
+export async function addToWatchlist(newTickers: Ticker[]): Promise<Ticker[]> {
+  const { tickers } = await apiPost<WatchlistResponse>("/watchlist", { tickers: newTickers });
   return tickers;
 }
 

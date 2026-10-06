@@ -1,7 +1,16 @@
 import { useRouter } from "expo-router";
 import { Check, Plus, Search, X } from "lucide-react-native";
 import { useState } from "react";
-import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, TextInput, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/themed-text";
@@ -15,19 +24,38 @@ export default function AddTicker() {
   const router = useRouter();
   const { isFollowing, follow } = useWatchlist();
   const [query, setQuery] = useState("");
-  const [selected, setSelected] = useState<Ticker | null>(null);
+  const [selected, setSelected] = useState<Ticker[]>([]);
   const [saving, setSaving] = useState(false);
   const { results, loading, error } = useTickerSearch(query);
 
+  function isSelected(symbol: string) {
+    return selected.some((ticker) => ticker.symbol === symbol);
+  }
+
+  function toggle(ticker: Ticker) {
+    setSelected((current) =>
+      current.some((item) => item.symbol === ticker.symbol)
+        ? current.filter((item) => item.symbol !== ticker.symbol)
+        : [...current, ticker],
+    );
+  }
+
+  const addLabel =
+    selected.length === 0
+      ? "Escolha os tickers"
+      : selected.length === 1
+        ? `Adicionar ${selected[0].symbol}`
+        : `Adicionar ${selected.length} tickers`;
+
   async function handleAdd() {
-    if (!selected) return;
+    if (selected.length === 0) return;
     setSaving(true);
     try {
       await follow(selected);
       router.back();
     } catch (err) {
       Alert.alert(
-        `Não deu pra adicionar ${selected.symbol}`,
+        "Não deu pra adicionar",
         err instanceof Error ? err.message : "Tente novamente.",
       );
     } finally {
@@ -37,16 +65,18 @@ export default function AddTicker() {
 
   function renderItem({ item }: { item: Ticker }) {
     const following = isFollowing(item.symbol);
-    const isSelected = selected?.symbol === item.symbol;
+    const checked = isSelected(item.symbol);
 
     return (
       <Pressable
-        style={[styles.item, isSelected && styles.itemSelected, following && styles.itemDisabled]}
+        style={[styles.item, checked && styles.itemSelected, following && styles.itemDisabled]}
         disabled={following}
-        onPress={() => setSelected(item)}
+        onPress={() => toggle(item)}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked, disabled: following }}
       >
-        <View style={[styles.avatar, isSelected && styles.avatarSelected]}>
-          <ThemedText style={[styles.avatarText, isSelected && styles.avatarTextSelected]}>
+        <View style={[styles.avatar, checked && styles.avatarSelected]}>
+          <ThemedText style={[styles.avatarText, checked && styles.avatarTextSelected]}>
             {item.symbol.slice(0, 2)}
           </ThemedText>
         </View>
@@ -58,7 +88,7 @@ export default function AddTicker() {
         </View>
         {following ? (
           <ThemedText style={styles.followingText}>já segue</ThemedText>
-        ) : isSelected ? (
+        ) : checked ? (
           <View style={styles.checkCircle}>
             <Check size={14} strokeWidth={2.2} color={SinoBrand.white} />
           </View>
@@ -88,13 +118,32 @@ export default function AddTicker() {
           autoCorrect={false}
           autoFocus
           value={query}
-          onChangeText={(text) => {
-            setQuery(text);
-            setSelected(null);
-          }}
+          onChangeText={setQuery}
         />
         {loading && <ActivityIndicator size="small" color={SinoBrand.primary} />}
       </View>
+
+      {selected.length > 0 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          style={styles.chipsScroll}
+          contentContainerStyle={styles.chips}
+        >
+          {selected.map((ticker) => (
+            <Pressable
+              key={ticker.symbol}
+              style={styles.chip}
+              onPress={() => toggle(ticker)}
+              accessibilityLabel={`Remover ${ticker.symbol} da seleção`}
+            >
+              <ThemedText style={styles.chipText}>{ticker.symbol}</ThemedText>
+              <X size={13} strokeWidth={2} color={SinoBrand.primary} />
+            </Pressable>
+          ))}
+        </ScrollView>
+      )}
 
       <FlatList
         data={results}
@@ -114,8 +163,8 @@ export default function AddTicker() {
 
       <View style={styles.footer}>
         <Button
-          label={selected ? `Adicionar ${selected.symbol}` : "Escolha um ticker"}
-          disabled={!selected}
+          label={addLabel}
+          disabled={selected.length === 0}
           loading={saving}
           onPress={handleAdd}
         />
@@ -168,6 +217,29 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: SinoBrand.ink,
+  },
+  chipsScroll: {
+    flexGrow: 0,
+    marginTop: 12,
+  },
+  chips: {
+    paddingHorizontal: 20,
+    gap: 8,
+  },
+  chip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    height: 32,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: SinoBrand.primarySoft,
+  },
+  chipText: {
+    fontSize: 13.5,
+    lineHeight: 18,
+    fontWeight: "600",
+    color: SinoBrand.primary,
   },
   list: {
     paddingHorizontal: 20,

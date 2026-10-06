@@ -18,10 +18,19 @@ export async function listWatchlist(userId: string): Promise<WatchlistItem[]> {
   }));
 }
 
-export async function addToWatchlist(userId: string, item: WatchlistItem): Promise<void> {
-  await watchlistCollection(userId)
-    .doc(item.symbol)
-    .set({ name: item.name, createdAt: FieldValue.serverTimestamp() }, { merge: true });
+export async function addToWatchlist(userId: string, items: WatchlistItem[]): Promise<void> {
+  const collection = watchlistCollection(userId);
+  const batch = getFirestore().batch();
+
+  for (const item of items) {
+    batch.set(
+      collection.doc(item.symbol),
+      { name: item.name, createdAt: FieldValue.serverTimestamp() },
+      { merge: true },
+    );
+  }
+
+  await batch.commit();
 }
 
 export async function removeFromWatchlist(userId: string, symbol: string): Promise<void> {

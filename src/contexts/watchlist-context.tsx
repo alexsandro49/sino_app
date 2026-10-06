@@ -9,7 +9,7 @@ type WatchlistContextValue = {
   loading: boolean;
   error: string | null;
   isFollowing: (symbol: string) => boolean;
-  follow: (ticker: Ticker) => Promise<void>;
+  follow: (newTickers: Ticker[]) => Promise<void>;
   unfollow: (symbol: string) => Promise<void>;
 };
 
@@ -54,17 +54,20 @@ export function WatchlistProvider({ children }: { children: ReactNode }) {
     };
   }, [userId]);
 
-  async function follow(ticker: Ticker) {
-    if (tickers.some((existing) => existing.symbol === ticker.symbol)) return;
+  async function follow(newTickers: Ticker[]) {
+    const additions = newTickers.filter(
+      (ticker) => !tickers.some((existing) => existing.symbol === ticker.symbol),
+    );
+    if (additions.length === 0) return;
 
     const previous = tickers;
-    setTickers([...tickers, ticker]);
+    setTickers([...tickers, ...additions]);
     try {
-      setTickers(await addToWatchlist(ticker));
+      setTickers(await addToWatchlist(additions));
       setError(null);
     } catch (err) {
       setTickers(previous);
-      setError(messageOf(err, "Não foi possível adicionar o ticker."));
+      setError(messageOf(err, "Não foi possível adicionar os tickers."));
       throw err;
     }
   }

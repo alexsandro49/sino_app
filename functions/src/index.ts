@@ -6,7 +6,7 @@ import { logger } from "firebase-functions/logger";
 import { defineSecret } from "firebase-functions/params";
 
 import { getQuotes, searchTickers } from "./brapi.js";
-import { addToWatchlist, listWatchlist, removeFromWatchlist } from "./watchlist.js";
+import { addToWatchlist, listWatchlist, removeFromWatchlist, type WatchlistItem } from "./watchlist.js";
 
 initializeApp();
 
@@ -50,6 +50,27 @@ function parseSymbols(raw: unknown): string[] {
   return [...new Set(symbols)].slice(0, MAX_SYMBOLS);
 }
 
+function parseWatchlistItems(raw: unknown): WatchlistItem[] | null {
+  if (!Array.isArray(raw) || raw.length === 0 || raw.length > MAX_SYMBOLS) {
+    return null;
+  }
+
+  const items: WatchlistItem[] = [];
+
+  for (const entry of raw) {
+    const symbol = typeof entry?.symbol === "string" ? entry.symbol.trim().toUpperCase() : "";
+    const name = typeof entry?.name === "string" ? entry.name.trim().slice(0, MAX_NAME_LENGTH) : "";
+
+    if (!SYMBOL_PATTERN.test(symbol)) {
+      return null;
+    }
+
+    items.push({ symbol, name: name || symbol });
+  }
+
+  return items;
+}
+
 export const api = onRequest({ secrets: [brapiToken], cors: true }, async (req, res) => {
   const userId = await authenticatedUserId(req);
 
@@ -84,15 +105,14 @@ export const api = onRequest({ secrets: [brapiToken], cors: true }, async (req, 
     }
 
     if (req.method === "POST" && req.path === "/watchlist") {
-      const symbol = typeof req.body?.symbol === "string" ? req.body.symbol.trim().toUpperCase() : "";
-      const name = typeof req.body?.name === "string" ? req.body.name.trim().slice(0, MAX_NAME_LENGTH) : "";
+      const items = parseWatchlistItems(req.body?.tickers);
 
-      if (!SYMBOL_PATTERN.test(symbol)) {
-        res.status(400).json({ error: "Ticker inválido." });
+      if (!items) {
+        res.status(400).json({ error: "Lista de tickers inválida." });
         return;
       }
 
-      await addToWatchlist(userId, { symbol, name: name || symbol });
+      await addToWatchlist(userId, items);
       res.status(201).json({ tickers: await listWatchlist(userId) });
       return;
     }
