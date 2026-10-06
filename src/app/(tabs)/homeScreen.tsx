@@ -1,18 +1,21 @@
 import { useRouter } from "expo-router";
 import { Plus } from "lucide-react-native";
-import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, View } from "react-native";
+import { useRef } from "react";
+import { Pressable, RefreshControl, StyleSheet, View } from "react-native";
+import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
+import Animated, { FadeOut, LinearTransition } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { MarketStatusBadge } from "@/components/market-status-badge";
 import { SinoMark } from "@/components/sino-mark";
-import { TickerRow, TickerRowSkeleton } from "@/components/ticker-row";
+import { SwipeableTickerRow } from "@/components/swipeable-ticker-row";
+import { TickerRowSkeleton } from "@/components/ticker-row";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { SinoBrand, SinoRadius } from "@/constants/theme";
 import { useAuth } from "@/contexts/auth-context";
 import { useWatchlist } from "@/contexts/watchlist-context";
 import { useQuotes } from "@/hooks/use-quotes";
-import type { Ticker } from "@/services/market";
 import { isMarketOpen } from "@/services/market";
 
 const todayFormatter = new Intl.DateTimeFormat("pt-BR", {
@@ -48,11 +51,18 @@ export default function HomeScreen() {
     router.push("/addTicker");
   }
 
-  function confirmUnfollow(ticker: Ticker) {
-    Alert.alert(`Deixar de seguir ${ticker.symbol}?`, "Ele sai da sua carteira e dos avisos do fim do pregão.", [
-      { text: "Cancelar", style: "cancel" },
-      { text: "Deixar de seguir", style: "destructive", onPress: () => unfollow(ticker.symbol) },
-    ]);
+  const openRow = useRef<SwipeableMethods | null>(null);
+
+  function handleRowOpen(methods: SwipeableMethods) {
+    if (openRow.current && openRow.current !== methods) {
+      openRow.current.close();
+    }
+    openRow.current = methods;
+  }
+
+  function closeOpenRow() {
+    openRow.current?.close();
+    openRow.current = null;
   }
 
   const footnote = watchlistError
@@ -106,21 +116,32 @@ export default function HomeScreen() {
           ) : null}
         </View>
       ) : (
-        <FlatList
+        <Animated.FlatList
           data={tickers}
           keyExtractor={(ticker) => ticker.symbol}
           contentContainerStyle={styles.list}
+          itemLayoutAnimation={LinearTransition.duration(220)}
+          onScrollBeginDrag={closeOpenRow}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={SinoBrand.textTertiary} />
           }
           renderItem={({ item }) => (
-            <TickerRow
-              ticker={item}
-              quote={quotes[item.symbol]}
-              pending={quotesLoading}
-              onPress={() => router.push({ pathname: "/ticker/[symbol]", params: { symbol: item.symbol } })}
-              onLongPress={() => confirmUnfollow(item)}
-            />
+            <Animated.View exiting={FadeOut.duration(160)}>
+              <SwipeableTickerRow
+                ticker={item}
+                quote={quotes[item.symbol]}
+                pending={quotesLoading}
+                onOpen={handleRowOpen}
+                onPress={() => {
+                  closeOpenRow();
+                  router.push({ pathname: "/ticker/[symbol]", params: { symbol: item.symbol } });
+                }}
+                onRemove={() => {
+                  openRow.current = null;
+                  unfollow(item.symbol);
+                }}
+              />
+            </Animated.View>
           )}
           ListFooterComponent={
             <Text

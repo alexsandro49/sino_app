@@ -1,5 +1,5 @@
 import { Minus, TrendingDown, TrendingUp } from "lucide-react-native";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View, type PressableProps } from "react-native";
 
 import { Text } from "@/components/ui/text";
 import { SinoBrand, SinoRadius } from "@/constants/theme";
@@ -11,7 +11,8 @@ type TickerRowProps = {
   quote?: Quote;
   pending?: boolean;
   onPress?: () => void;
-  onLongPress?: () => void;
+  accessibilityActions?: PressableProps["accessibilityActions"];
+  onAccessibilityAction?: PressableProps["onAccessibilityAction"];
 };
 
 const trendStyle = {
@@ -20,19 +21,26 @@ const trendStyle = {
   down: { Icon: TrendingDown, tone: "down", iconColor: SinoBrand.down, background: SinoBrand.downSoft },
 } as const;
 
-export function TickerRow({ ticker, quote, pending = false, onPress, onLongPress }: TickerRowProps) {
+export function TickerRow({
+  ticker,
+  quote,
+  pending = false,
+  onPress,
+  accessibilityActions,
+  onAccessibilityAction,
+}: TickerRowProps) {
   const trend = quote ? trendStyle[trendOf(quote.changePercent)] : null;
 
   return (
     <Pressable
       onPress={onPress}
-      onLongPress={onLongPress}
-      delayLongPress={350}
+      accessibilityActions={accessibilityActions}
+      onAccessibilityAction={onAccessibilityAction}
       accessibilityRole="button"
       accessibilityLabel={
         quote ? `${ticker.symbol}, ${formatChange(quote.changePercent)}, ${formatPrice(quote.price)}` : ticker.symbol
       }
-      accessibilityHint="Toque para ver detalhes. Segure para deixar de seguir."
+      accessibilityHint="Toque para ver os detalhes."
       style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
     >
       <View style={[styles.iconBox, { backgroundColor: trend?.background ?? SinoBrand.neutralSoft }]}>

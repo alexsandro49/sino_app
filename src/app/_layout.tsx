@@ -8,6 +8,7 @@ import { DefaultTheme, Stack, ThemeProvider, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { SinoBrand } from "@/constants/theme";
 import { AuthProvider, useAuth } from "@/contexts/auth-context";
@@ -58,38 +59,40 @@ export default function RootLayout() {
   }
 
   return (
-    <AuthProvider>
-      <WatchlistProvider>
-        <ThemeProvider value={navigationTheme}>
-          <StatusBar style="dark" />
-          <AuthRouter />
-          <Stack
-            screenOptions={{ headerShown: false, contentStyle: { backgroundColor: SinoBrand.background } }}
-            initialRouteName="signIn"
-          >
-            <Stack.Screen
-              name="addTicker"
-              options={{
-                presentation: "formSheet",
-                sheetAllowedDetents: [0.92],
-                sheetGrabberVisible: true,
-                sheetCornerRadius: 22,
-                contentStyle: { backgroundColor: SinoBrand.white },
-              }}
-            />
-            <Stack.Screen
-              name="ticker/[symbol]"
-              options={{
-                presentation: "formSheet",
-                sheetAllowedDetents: [0.88],
-                sheetGrabberVisible: true,
-                sheetCornerRadius: 22,
-                contentStyle: { backgroundColor: SinoBrand.white },
-              }}
-            />
-          </Stack>
-        </ThemeProvider>
-      </WatchlistProvider>
-    </AuthProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <AuthProvider>
+        <WatchlistProvider>
+          <ThemeProvider value={navigationTheme}>
+            <StatusBar style="dark" />
+            <AuthRouter />
+            <Stack
+              screenOptions={{ headerShown: false, contentStyle: { backgroundColor: SinoBrand.background } }}
+              initialRouteName="signIn"
+            >
+              <Stack.Screen
+                name="addTicker"
+                options={{
+                  presentation: "formSheet",
+                  sheetAllowedDetents: [0.92],
+                  sheetGrabberVisible: true,
+                  sheetCornerRadius: 22,
+                  contentStyle: { backgroundColor: SinoBrand.white },
+                }}
+              />
+              <Stack.Screen
+                name="ticker/[symbol]"
+                options={{
+                  presentation: "formSheet",
+                  sheetAllowedDetents: [0.88],
+                  sheetGrabberVisible: true,
+                  sheetCornerRadius: 22,
+                  contentStyle: { backgroundColor: SinoBrand.white },
+                }}
+              />
+            </Stack>
+          </ThemeProvider>
+        </WatchlistProvider>
+      </AuthProvider>
+    </GestureHandlerRootView>
   );
 }
