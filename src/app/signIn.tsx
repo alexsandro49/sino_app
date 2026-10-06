@@ -1,15 +1,18 @@
 import { FontAwesome } from "@expo/vector-icons";
 import { useState } from "react";
-import { Alert, StyleSheet, View } from "react-native";
+import { Alert, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { SinoMark } from "@/components/sino-mark";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
-import { SinoBrand } from "@/constants/theme";
+
 import { useAuth } from "@/contexts/auth-context";
+import { themedStyles, useColors } from "@/hooks/use-colors";
 
 export default function SignIn() {
+  const colors = useColors();
+  const styles = useStyles();
   const { signInWithGoogle } = useAuth();
   const [loading, setLoading] = useState(false);
 
@@ -46,7 +49,7 @@ export default function SignIn() {
         <Button
           variant="secondary"
           label="Continuar com Google"
-          icon={<FontAwesome name="google" size={17} color={SinoBrand.primary} />}
+          icon={<FontAwesome name="google" size={17} color={colors.primaryText} />}
           onPress={handleGoogleLogin}
           loading={loading}
         />
@@ -58,10 +61,10 @@ export default function SignIn() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => ({
   container: {
     flex: 1,
-    backgroundColor: SinoBrand.background,
+    backgroundColor: c.background,
   },
   brand: {
     flex: 1,
@@ -85,4 +88,4 @@ const styles = StyleSheet.create({
   footnote: {
     textAlign: "center",
   },
-});
+}));

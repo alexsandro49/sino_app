@@ -1,18 +1,20 @@
 import { Tabs } from "expo-router";
 import { ChartColumn, UserRound } from "lucide-react-native";
 
-import { SinoBrand, SinoFonts } from "@/constants/theme";
+import { SinoFonts } from "@/constants/theme";
+import { useColors } from "@/hooks/use-colors";
 
 export default function TabsLayout() {
+  const colors = useColors();
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: SinoBrand.primary,
-        tabBarInactiveTintColor: SinoBrand.textTertiary,
+        tabBarActiveTintColor: colors.primaryText,
+        tabBarInactiveTintColor: colors.textTertiary,
         tabBarStyle: {
-          backgroundColor: SinoBrand.background,
-          borderTopColor: SinoBrand.divider,
+          backgroundColor: colors.background,
+          borderTopColor: colors.divider,
           borderTopWidth: 1,
           elevation: 0,
           shadowOpacity: 0,
@@ -21,7 +23,7 @@ export default function TabsLayout() {
           fontFamily: SinoFonts.medium,
           fontSize: 12,
         },
-        sceneStyle: { backgroundColor: SinoBrand.background },
+        sceneStyle: { backgroundColor: colors.background },
       }}
     >
       <Tabs.Screen

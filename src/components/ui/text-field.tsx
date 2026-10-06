@@ -1,7 +1,8 @@
 import { useState, type ReactNode } from "react";
-import { StyleSheet, TextInput, View, type TextInputProps } from "react-native";
+import { TextInput, View, type TextInputProps } from "react-native";
 
-import { SinoBrand, SinoFonts, SinoRadius } from "@/constants/theme";
+import { SinoFonts, SinoRadius } from "@/constants/theme";
+import { themedStyles, useColors } from "@/hooks/use-colors";
 
 type TextFieldProps = TextInputProps & {
   leading?: ReactNode;
@@ -9,14 +10,17 @@ type TextFieldProps = TextInputProps & {
 };
 
 export function TextField({ leading, trailing, style, onFocus, onBlur, ...props }: TextFieldProps) {
+  const colors = useColors();
+  const styles = useStyles();
   const [focused, setFocused] = useState(false);
 
   return (
     <View style={[styles.container, focused && styles.focused]}>
       {leading}
       <TextInput
-        placeholderTextColor={SinoBrand.placeholder}
-        selectionColor={SinoBrand.primary}
+        placeholderTextColor={colors.placeholder}
+        selectionColor={colors.primaryText}
+        keyboardAppearance="default"
         {...props}
         onFocus={(event) => {
           setFocused(true);
@@ -33,7 +37,7 @@ export function TextField({ leading, trailing, style, onFocus, onBlur, ...props 
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => ({
   container: {
     flexDirection: "row",
     alignItems: "center",
@@ -42,12 +46,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     borderRadius: SinoRadius.control,
     borderWidth: 1,
-    borderColor: SinoBrand.border,
-    backgroundColor: SinoBrand.white,
+    borderColor: c.border,
+    backgroundColor: c.surface,
   },
   focused: {
     borderWidth: 1.5,
-    borderColor: SinoBrand.primary,
+    borderColor: c.primaryText,
     paddingHorizontal: 14.5,
   },
   input: {
@@ -55,6 +59,6 @@ const styles = StyleSheet.create({
     height: "100%",
     fontFamily: SinoFonts.regular,
     fontSize: 15,
-    color: SinoBrand.ink,
+    color: c.ink,
   },
-});
+}));

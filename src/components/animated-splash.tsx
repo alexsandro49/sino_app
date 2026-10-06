@@ -1,9 +1,11 @@
 import * as Haptics from "expo-haptics";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useRef, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import Animated, {
   Easing,
+  Extrapolation,
+  interpolate,
   type SharedValue,
   useAnimatedStyle,
   useReducedMotion,
@@ -16,7 +18,7 @@ import { scheduleOnRN } from "react-native-worklets";
 
 import { SinoMark } from "@/components/sino-mark";
 import { Text } from "@/components/ui/text";
-import { SinoBrand } from "@/constants/theme";
+import { themedStyles } from "@/hooks/use-colors";
 
 const MARK_SIZE = 72;
 const MARK_HEIGHT = MARK_SIZE * 0.935;
@@ -28,6 +30,7 @@ const REDUCED_INTRO_DURATION = 450;
 const swingEasing = Easing.inOut(Easing.quad);
 
 function SoundWave({ progress }: { progress: SharedValue<number> }) {
+  const styles = useStyles();
   const style = useAnimatedStyle(() => ({
     opacity: 0.32 * (1 - progress.value),
     transform: [{ scale: 0.5 + progress.value * 0.9 }],
@@ -42,6 +45,7 @@ type AnimatedSplashProps = {
 };
 
 export function AnimatedSplash({ ready, onFinish }: AnimatedSplashProps) {
+  const styles = useStyles();
   const reduceMotion = useReducedMotion();
   const [introDone, setIntroDone] = useState(false);
   const started = useRef(false);
@@ -84,17 +88,22 @@ export function AnimatedSplash({ ready, onFinish }: AnimatedSplashProps) {
   useEffect(() => {
     if (!ready || !introDone) return;
 
-    exit.value = withTiming(1, { duration: 280, easing: Easing.inOut(Easing.quad) }, (finished) => {
+    exit.value = withTiming(1, { duration: 420, easing: Easing.inOut(Easing.quad) }, (finished) => {
       if (finished) scheduleOnRN(onFinish);
     });
   }, [ready, introDone, exit, onFinish]);
 
   const containerStyle = useAnimatedStyle(() => ({
-    opacity: 1 - exit.value,
+    opacity: interpolate(exit.value, [0.4, 1], [1, 0], Extrapolation.CLAMP),
+  }));
+
+  const contentStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(exit.value, [0, 0.4], [1, 0], Extrapolation.CLAMP),
+    transform: [{ scale: interpolate(exit.value, [0, 0.4], [1, 0.94], Extrapolation.CLAMP) }],
   }));
 
   const markStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: 1 + exit.value * 0.08 }, { rotate: `${swing.value}deg` }],
+    transform: [{ rotate: `${swing.value}deg` }],
   }));
 
   const wordmarkStyle = useAnimatedStyle(() => ({
@@ -110,23 +119,34 @@ export function AnimatedSplash({ ready, onFinish }: AnimatedSplashProps) {
       accessibilityLabel="Sino"
       accessibilityRole="image"
     >
-      <View style={styles.waves}>
-        <SoundWave progress={firstWave} />
-        <SoundWave progress={secondWave} />
-      </View>
+      <Animated.View style={[styles.content, contentStyle]}>
+        <View style={styles.waves}>
+          <SoundWave progress={firstWave} />
+          <SoundWave progress={secondWave} />
+        </View>
 
-      <Animated.View style={[styles.mark, markStyle]}>
-        <SinoMark size={MARK_SIZE} />
-      </Animated.View>
+        <Animated.View style={[styles.mark, markStyle]}>
+          <SinoMark size={MARK_SIZE} />
+        </Animated.View>
 
-      <Animated.View style={[styles.wordmark, wordmarkStyle]}>
-        <Text variant="display">Sino</Text>
+        <Animated.View style={[styles.wordmark, wordmarkStyle]}>
+          <Text variant="display">Sino</Text>
+        </Animated.View>
       </Animated.View>
     </Animated.View>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => ({
+  content: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   container: {
     position: "absolute",
     top: 0,
@@ -136,7 +156,7 @@ const styles = StyleSheet.create({
     zIndex: 10,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: SinoBrand.background,
+    backgroundColor: c.background,
   },
   mark: {
     transformOrigin: "50% 0%",
@@ -155,11 +175,11 @@ const styles = StyleSheet.create({
     height: WAVE_SIZE,
     borderRadius: WAVE_SIZE / 2,
     borderWidth: 2,
-    borderColor: SinoBrand.primary,
+    borderColor: c.markDome,
   },
   wordmark: {
     position: "absolute",
     top: "50%",
     marginTop: MARK_HEIGHT / 2 + 18,
   },
-});
+}));

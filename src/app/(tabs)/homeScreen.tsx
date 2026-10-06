@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router";
 import { Plus } from "lucide-react-native";
 import { useRef } from "react";
-import { Pressable, RefreshControl, StyleSheet, View } from "react-native";
+import { Pressable, RefreshControl, View } from "react-native";
 import type { SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import Animated, { FadeOut, LinearTransition } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -12,11 +12,12 @@ import { SwipeableTickerRow } from "@/components/swipeable-ticker-row";
 import { TickerRowSkeleton } from "@/components/ticker-row";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
-import { SinoBrand, SinoRadius } from "@/constants/theme";
+import { SinoRadius } from "@/constants/theme";
 import { useAuth } from "@/contexts/auth-context";
 import { useWatchlist } from "@/contexts/watchlist-context";
 import { useQuotes } from "@/hooks/use-quotes";
 import { isMarketOpen } from "@/services/market";
+import { themedStyles, useColors } from "@/hooks/use-colors";
 
 const todayFormatter = new Intl.DateTimeFormat("pt-BR", {
   weekday: "long",
@@ -32,6 +33,8 @@ function formatToday() {
 }
 
 export default function HomeScreen() {
+  const colors = useColors();
+  const styles = useStyles();
   const router = useRouter();
   const { user } = useAuth();
   const { tickers, loading: watchlistLoading, error: watchlistError, unfollow } = useWatchlist();
@@ -106,7 +109,7 @@ export default function HomeScreen() {
           <Button
             label="Cadastrar o primeiro"
             size="compact"
-            icon={<Plus size={17} strokeWidth={2} color={SinoBrand.white} />}
+            icon={<Plus size={17} strokeWidth={2} color={colors.onPrimary} />}
             onPress={openAddTicker}
           />
           {watchlistError ? (
@@ -123,7 +126,7 @@ export default function HomeScreen() {
           itemLayoutAnimation={LinearTransition.duration(220)}
           onScrollBeginDrag={closeOpenRow}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={SinoBrand.textTertiary} />
+            <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.textTertiary} />
           }
           renderItem={({ item }) => (
             <Animated.View exiting={FadeOut.duration(160)}>
@@ -162,17 +165,17 @@ export default function HomeScreen() {
           accessibilityRole="button"
           style={({ pressed }) => [styles.fab, pressed && styles.fabPressed]}
         >
-          <Plus size={25} color={SinoBrand.white} strokeWidth={2} />
+          <Plus size={25} color={colors.onPrimary} strokeWidth={2} />
         </Pressable>
       ) : null}
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => ({
   container: {
     flex: 1,
-    backgroundColor: SinoBrand.background,
+    backgroundColor: c.background,
   },
   header: {
     paddingTop: 22,
@@ -220,11 +223,11 @@ const styles = StyleSheet.create({
     width: 58,
     height: 58,
     borderRadius: SinoRadius.fab,
-    backgroundColor: SinoBrand.primary,
+    backgroundColor: c.primary,
     alignItems: "center",
     justifyContent: "center",
   },
   fabPressed: {
-    backgroundColor: SinoBrand.primaryPressed,
+    backgroundColor: c.primaryPressed,
   },
-});
+}));

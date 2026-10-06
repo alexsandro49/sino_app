@@ -1,20 +1,22 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { ExternalLink, X } from "lucide-react-native";
-import { Alert, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Alert, Pressable, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { TickerLogo } from "@/components/ticker-logo";
 import { ChangePill } from "@/components/ticker-row";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
-import { SinoBrand, SinoFonts, SinoRadius } from "@/constants/theme";
+import { SinoFonts, SinoRadius } from "@/constants/theme";
 import { useWatchlist } from "@/contexts/watchlist-context";
 import { useQuotes } from "@/hooks/use-quotes";
 import { googleFinanceUrl, type Quote } from "@/services/market";
 import { formatCompact, formatPrice, formatUpdatedAt } from "@/utils/format";
+import { themedStyles, useColors } from "@/hooks/use-colors";
 
 function DayRange({ quote }: { quote: Quote }) {
+  const styles = useStyles();
   if (quote.dayLow === null || quote.dayHigh === null || quote.dayHigh <= quote.dayLow) {
     return null;
   }
@@ -43,6 +45,7 @@ function DayRange({ quote }: { quote: Quote }) {
 }
 
 function Stat({ label, value, wide = false }: { label: string; value: string; wide?: boolean }) {
+  const styles = useStyles();
   return (
     <View style={[styles.stat, wide && styles.statWide]}>
       <Text variant="caption" tone="secondary">
@@ -56,6 +59,7 @@ function Stat({ label, value, wide = false }: { label: string; value: string; wi
 }
 
 function DetailSkeleton() {
+  const styles = useStyles();
   return (
     <View style={styles.skeletonGroup}>
       <View style={[styles.skeleton, { width: 150, height: 30 }]} />
@@ -71,6 +75,8 @@ function DetailSkeleton() {
 }
 
 export default function TickerDetail() {
+  const colors = useColors();
+  const styles = useStyles();
   const router = useRouter();
   const { symbol: rawSymbol } = useLocalSearchParams<{ symbol: string }>();
   const symbol = String(rawSymbol ?? "").toUpperCase();
@@ -82,7 +88,7 @@ export default function TickerDetail() {
 
   function openGoogleFinance() {
     WebBrowser.openBrowserAsync(googleFinanceUrl(symbol), {
-      controlsColor: SinoBrand.primary,
+      controlsColor: colors.primaryText,
       presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
     });
   }
@@ -124,7 +130,7 @@ export default function TickerDetail() {
           hitSlop={8}
           style={({ pressed }) => [styles.closeButton, pressed && styles.closeButtonPressed]}
         >
-          <X size={15} strokeWidth={1.9} color={SinoBrand.textSecondary} />
+          <X size={15} strokeWidth={1.9} color={colors.textSecondary} />
         </Pressable>
       </View>
 
@@ -183,7 +189,7 @@ export default function TickerDetail() {
         <Button
           variant="secondary"
           label="Ver no Google Finance"
-          icon={<ExternalLink size={16} strokeWidth={1.8} color={SinoBrand.ink} />}
+          icon={<ExternalLink size={16} strokeWidth={1.8} color={colors.ink} />}
           onPress={openGoogleFinance}
         />
         {isFollowing(symbol) ? (
@@ -194,10 +200,10 @@ export default function TickerDetail() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => ({
   container: {
     flex: 1,
-    backgroundColor: SinoBrand.white,
+    backgroundColor: c.surface,
     paddingTop: 22,
   },
   header: {
@@ -215,12 +221,12 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 9,
-    backgroundColor: SinoBrand.neutralSoft,
+    backgroundColor: c.neutralSoft,
     alignItems: "center",
     justifyContent: "center",
   },
   closeButtonPressed: {
-    backgroundColor: SinoBrand.border,
+    backgroundColor: c.border,
   },
   content: {
     paddingHorizontal: 20,
@@ -247,7 +253,7 @@ const styles = StyleSheet.create({
   rangeTrack: {
     height: 6,
     borderRadius: 3,
-    backgroundColor: SinoBrand.neutralSoft,
+    backgroundColor: c.neutralSoft,
     justifyContent: "center",
   },
   rangeFill: {
@@ -256,7 +262,7 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     borderRadius: 3,
-    backgroundColor: SinoBrand.primarySoft,
+    backgroundColor: c.primarySoft,
   },
   rangeMarker: {
     position: "absolute",
@@ -265,8 +271,8 @@ const styles = StyleSheet.create({
     marginLeft: -7,
     borderRadius: 7,
     borderWidth: 3,
-    borderColor: SinoBrand.white,
-    backgroundColor: SinoBrand.primary,
+    borderColor: c.surface,
+    backgroundColor: c.primary,
   },
   rangeLabels: {
     flexDirection: "row",
@@ -284,7 +290,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 14,
     borderRadius: SinoRadius.control,
-    backgroundColor: SinoBrand.neutralMuted,
+    backgroundColor: c.neutralMuted,
   },
   statWide: {
     flexBasis: "100%",
@@ -300,7 +306,7 @@ const styles = StyleSheet.create({
   },
   skeleton: {
     borderRadius: 6,
-    backgroundColor: SinoBrand.skeleton,
+    backgroundColor: c.skeleton,
   },
   errorBox: {
     alignItems: "center",
@@ -316,4 +322,4 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
     gap: 4,
   },
-});
+}));

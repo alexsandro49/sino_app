@@ -1,6 +1,6 @@
 import { StyleSheet, View } from "react-native";
 
-import { SinoBrand } from "@/constants/theme";
+import { useColors } from "@/hooks/use-colors";
 
 type SinoMarkProps = {
   size?: number;
@@ -8,41 +8,39 @@ type SinoMarkProps = {
 };
 
 export function SinoMark({ size = 46, muted = false }: SinoMarkProps) {
+  const colors = useColors();
   const domeHeight = size / 2;
   const baseWidth = size * 1.17;
   const baseHeight = Math.max(2, size * 0.087);
   const clapper = Math.max(3.5, size * 0.174);
-  const detailColor = muted ? SinoBrand.mutedMark : SinoBrand.ink;
+  const detailColor = muted ? colors.mutedMark : colors.markDetail;
 
   return (
     <View style={[styles.container, { gap: Math.max(1.5, size * 0.087) }]} accessible={false}>
       {muted ? (
         <View style={{ width: size, height: domeHeight, overflow: "hidden" }}>
           <View
-            style={[
-              styles.mutedDome,
-              {
-                width: size,
-                height: size,
-                borderRadius: domeHeight,
-                borderWidth: Math.max(1, size * 0.03),
-              },
-            ]}
+            style={{
+              width: size,
+              height: size,
+              borderRadius: domeHeight,
+              borderWidth: Math.max(1, size * 0.03),
+              borderColor: colors.mutedMarkOutline,
+              borderStyle: "dashed",
+            }}
           />
         </View>
       ) : (
         <View
-          style={[
-            styles.dome,
-            {
-              width: size,
-              height: domeHeight,
-              borderTopLeftRadius: domeHeight,
-              borderTopRightRadius: domeHeight,
-              borderBottomLeftRadius: size * 0.065,
-              borderBottomRightRadius: size * 0.065,
-            },
-          ]}
+          style={{
+            width: size,
+            height: domeHeight,
+            borderTopLeftRadius: domeHeight,
+            borderTopRightRadius: domeHeight,
+            borderBottomLeftRadius: size * 0.065,
+            borderBottomRightRadius: size * 0.065,
+            backgroundColor: colors.markDome,
+          }}
         />
       )}
       <View
@@ -68,12 +66,5 @@ export function SinoMark({ size = 46, muted = false }: SinoMarkProps) {
 const styles = StyleSheet.create({
   container: {
     alignItems: "center",
-  },
-  dome: {
-    backgroundColor: SinoBrand.primary,
-  },
-  mutedDome: {
-    borderColor: SinoBrand.mutedMarkOutline,
-    borderStyle: "dashed",
   },
 });

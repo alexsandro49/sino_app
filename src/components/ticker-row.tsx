@@ -1,11 +1,12 @@
 import { Minus, TrendingDown, TrendingUp } from "lucide-react-native";
-import { Pressable, StyleSheet, View, type PressableProps } from "react-native";
+import { Pressable, View, type PressableProps } from "react-native";
 
 import { TickerLogo } from "@/components/ticker-logo";
 import { Text } from "@/components/ui/text";
-import { SinoBrand, SinoFonts, SinoRadius } from "@/constants/theme";
+import { SinoFonts, SinoRadius, type SinoColors } from "@/constants/theme";
 import type { Quote, Ticker } from "@/services/market";
 import { formatChange, formatPrice, trendOf, type Trend } from "@/utils/format";
+import { themedStyles, useColors } from "@/hooks/use-colors";
 
 type TickerRowProps = {
   ticker: Ticker;
@@ -17,18 +18,20 @@ type TickerRowProps = {
 };
 
 export const trendStyle = {
-  flat: { Icon: Minus, tone: "secondary", iconColor: SinoBrand.textSecondary, background: SinoBrand.neutralSoft },
-  up: { Icon: TrendingUp, tone: "up", iconColor: SinoBrand.up, background: SinoBrand.upSoft },
-  down: { Icon: TrendingDown, tone: "down", iconColor: SinoBrand.down, background: SinoBrand.downSoft },
-} as const;
+  flat: { Icon: Minus, tone: "secondary", iconColor: "textSecondary", background: "neutralSoft" },
+  up: { Icon: TrendingUp, tone: "up", iconColor: "up", background: "upSoft" },
+  down: { Icon: TrendingDown, tone: "down", iconColor: "down", background: "downSoft" },
+} as const satisfies Record<Trend, { iconColor: keyof SinoColors; background: keyof SinoColors } & Record<string, unknown>>;
 
 export function ChangePill({ changePercent }: { changePercent: number }) {
+  const colors = useColors();
+  const styles = useStyles();
   const trend: Trend = trendOf(changePercent);
   const style = trendStyle[trend];
 
   return (
-    <View style={[styles.pill, { backgroundColor: style.background }]}>
-      <style.Icon size={13} strokeWidth={2.2} color={style.iconColor} />
+    <View style={[styles.pill, { backgroundColor: colors[style.background] }]}>
+      <style.Icon size={13} strokeWidth={2.2} color={colors[style.iconColor]} />
       <Text variant="label" tone={style.tone} style={styles.pillText}>
         {formatChange(changePercent)}
       </Text>
@@ -44,6 +47,7 @@ export function TickerRow({
   accessibilityActions,
   onAccessibilityAction,
 }: TickerRowProps) {
+  const styles = useStyles();
   return (
     <Pressable
       onPress={onPress}
@@ -92,6 +96,7 @@ export function TickerRow({
 }
 
 export function TickerRowSkeleton() {
+  const styles = useStyles();
   return (
     <View style={styles.card}>
       <View style={[styles.skeleton, styles.skeletonLogo]} />
@@ -107,7 +112,7 @@ export function TickerRowSkeleton() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => ({
   card: {
     flexDirection: "row",
     alignItems: "center",
@@ -116,11 +121,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: SinoRadius.card,
     borderWidth: 1,
-    borderColor: SinoBrand.cardBorder,
-    backgroundColor: SinoBrand.white,
+    borderColor: c.cardBorder,
+    backgroundColor: c.surface,
   },
   cardPressed: {
-    backgroundColor: SinoBrand.neutralSoft,
+    backgroundColor: c.neutralSoft,
   },
   info: {
     flex: 1,
@@ -146,7 +151,7 @@ const styles = StyleSheet.create({
   },
   skeleton: {
     borderRadius: 4,
-    backgroundColor: SinoBrand.skeleton,
+    backgroundColor: c.skeleton,
   },
   skeletonLogo: {
     width: 40,
@@ -171,4 +176,4 @@ const styles = StyleSheet.create({
     width: 50,
     height: 11,
   },
-});
+}));

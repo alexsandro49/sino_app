@@ -3,7 +3,8 @@ import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 
 import { Text } from "@/components/ui/text";
-import { SinoBrand, SinoFonts } from "@/constants/theme";
+import { SinoFonts } from "@/constants/theme";
+import { useColors } from "@/hooks/use-colors";
 
 type TickerLogoProps = {
   symbol: string;
@@ -12,12 +13,15 @@ type TickerLogoProps = {
 };
 
 export function TickerLogo({ symbol, logoUrl, size = 38 }: TickerLogoProps) {
+  const colors = useColors();
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
   const showImage = Boolean(logoUrl) && failedUrl !== logoUrl;
   const radius = Math.round(size * 0.27);
 
   return (
-    <View style={[styles.box, { width: size, height: size, borderRadius: radius }]}>
+    <View
+      style={[styles.box, { width: size, height: size, borderRadius: radius, backgroundColor: colors.neutralSoft }]}
+    >
       {showImage ? (
         <Image
           source={{ uri: logoUrl! }}
@@ -46,7 +50,6 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: SinoBrand.neutralSoft,
   },
   monogram: {
     fontFamily: SinoFonts.semibold,

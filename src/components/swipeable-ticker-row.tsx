@@ -1,14 +1,15 @@
 import * as Haptics from "expo-haptics";
 import { Trash2 } from "lucide-react-native";
 import { useRef } from "react";
-import { Pressable, StyleSheet } from "react-native";
+import { Pressable } from "react-native";
 import ReanimatedSwipeable, { type SwipeableMethods } from "react-native-gesture-handler/ReanimatedSwipeable";
 import Animated, { Extrapolation, interpolate, useAnimatedStyle, type SharedValue } from "react-native-reanimated";
 
 import { TickerRow } from "@/components/ticker-row";
 import { Text } from "@/components/ui/text";
-import { SinoBrand, SinoFonts, SinoRadius } from "@/constants/theme";
+import { SinoFonts, SinoRadius } from "@/constants/theme";
 import type { Quote, Ticker } from "@/services/market";
+import { themedStyles, useColors } from "@/hooks/use-colors";
 
 const ACTION_WIDTH = 92;
 
@@ -22,6 +23,8 @@ type SwipeableTickerRowProps = {
 };
 
 function RemoveAction({ progress, onRemove }: { progress: SharedValue<number>; onRemove: () => void }) {
+  const colors = useColors();
+  const styles = useStyles();
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: interpolate(progress.value, [0, 0.4, 1], [0, 0.6, 1], Extrapolation.CLAMP),
     transform: [{ scale: interpolate(progress.value, [0, 1], [0.7, 1], Extrapolation.CLAMP) }],
@@ -35,8 +38,8 @@ function RemoveAction({ progress, onRemove }: { progress: SharedValue<number>; o
         accessibilityLabel="Deixar de seguir"
         style={({ pressed }) => [styles.action, pressed && styles.actionPressed]}
       >
-        <Trash2 size={19} strokeWidth={1.8} color={SinoBrand.white} />
-        <Text variant="caption" tone="white" style={styles.actionLabel}>
+        <Trash2 size={19} strokeWidth={1.8} color={colors.onPrimary} />
+        <Text variant="caption" tone="onPrimary" style={styles.actionLabel}>
           Remover
         </Text>
       </Pressable>
@@ -45,6 +48,7 @@ function RemoveAction({ progress, onRemove }: { progress: SharedValue<number>; o
 }
 
 export function SwipeableTickerRow({ ticker, quote, pending, onPress, onRemove, onOpen }: SwipeableTickerRowProps) {
+  const styles = useStyles();
   const swipeableRef = useRef<SwipeableMethods>(null);
 
   function remove() {
@@ -81,7 +85,7 @@ export function SwipeableTickerRow({ ticker, quote, pending, onPress, onRemove, 
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => ({
   container: {
     overflow: "visible",
   },
@@ -95,7 +99,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 4,
     borderRadius: SinoRadius.card,
-    backgroundColor: SinoBrand.down,
+    backgroundColor: c.destructiveFill,
   },
   actionPressed: {
     opacity: 0.85,
@@ -103,4 +107,4 @@ const styles = StyleSheet.create({
   actionLabel: {
     fontFamily: SinoFonts.semibold,
   },
-});
+}));

@@ -1,6 +1,7 @@
 import { Text as NativeText, StyleSheet, type TextProps as NativeTextProps } from "react-native";
 
-import { SinoBrand, SinoFonts } from "@/constants/theme";
+import { SinoFonts, type SinoColors } from "@/constants/theme";
+import { useColors } from "@/hooks/use-colors";
 
 type TextVariant =
   | "display"
@@ -15,25 +16,26 @@ type TextVariant =
   | "overline"
   | "caption";
 
-type TextTone = "ink" | "secondary" | "tertiary" | "primary" | "up" | "down" | "white";
+type TextTone = "ink" | "secondary" | "tertiary" | "primary" | "up" | "down" | "onPrimary";
 
 export type TextProps = NativeTextProps & {
   variant?: TextVariant;
   tone?: TextTone;
 };
 
-const toneColor: Record<TextTone, string> = {
-  ink: SinoBrand.ink,
-  secondary: SinoBrand.textSecondary,
-  tertiary: SinoBrand.textTertiary,
-  primary: SinoBrand.primary,
-  up: SinoBrand.up,
-  down: SinoBrand.down,
-  white: SinoBrand.white,
+const toneColor: Record<TextTone, keyof SinoColors> = {
+  ink: "ink",
+  secondary: "textSecondary",
+  tertiary: "textTertiary",
+  primary: "primaryText",
+  up: "up",
+  down: "down",
+  onPrimary: "onPrimary",
 };
 
 export function Text({ variant = "body", tone = "ink", style, ...rest }: TextProps) {
-  return <NativeText {...rest} style={[styles[variant], { color: toneColor[tone] }, style]} />;
+  const colors = useColors();
+  return <NativeText {...rest} style={[styles[variant], { color: colors[toneColor[tone]] }, style]} />;
 }
 
 const styles = StyleSheet.create({

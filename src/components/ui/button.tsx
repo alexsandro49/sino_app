@@ -1,15 +1,9 @@
 import type { ReactNode } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  View,
-  type StyleProp,
-  type ViewStyle,
-} from "react-native";
+import { ActivityIndicator, Pressable, View, type StyleProp, type ViewStyle } from "react-native";
 
 import { Text } from "@/components/ui/text";
-import { SinoBrand, SinoFonts, SinoRadius } from "@/constants/theme";
+import { SinoFonts, SinoRadius, type SinoColors } from "@/constants/theme";
+import { themedStyles, useColors } from "@/hooks/use-colors";
 
 type ButtonVariant = "primary" | "secondary" | "destructive" | "ghost";
 type ButtonSize = "regular" | "compact";
@@ -25,11 +19,11 @@ type ButtonProps = {
   style?: StyleProp<ViewStyle>;
 };
 
-const labelColor: Record<ButtonVariant, string> = {
-  primary: SinoBrand.white,
-  secondary: SinoBrand.ink,
-  destructive: SinoBrand.down,
-  ghost: SinoBrand.textSecondary,
+const labelColor: Record<ButtonVariant, keyof SinoColors> = {
+  primary: "onPrimary",
+  secondary: "ink",
+  destructive: "down",
+  ghost: "textSecondary",
 };
 
 export function Button({
@@ -42,7 +36,10 @@ export function Button({
   icon,
   style,
 }: ButtonProps) {
+  const colors = useColors();
+  const styles = useStyles();
   const isDisabled = disabled || loading;
+  const color = colors[labelColor[variant]];
 
   return (
     <Pressable
@@ -53,33 +50,25 @@ export function Button({
       style={({ pressed }) => [
         styles.base,
         size === "compact" ? styles.compact : styles.regular,
-        variantStyles[variant],
-        pressed && pressedStyles[variant],
+        styles[variant],
+        pressed && styles[`${variant}Pressed`],
         isDisabled && styles.disabled,
         style,
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={labelColor[variant]} />
+        <ActivityIndicator color={color} />
       ) : (
         <View style={styles.content}>
           {icon}
-          <Text
-            style={[
-              styles.label,
-              variant === "ghost" && styles.ghostLabel,
-              { color: labelColor[variant] },
-            ]}
-          >
-            {label}
-          </Text>
+          <Text style={[styles.label, variant === "ghost" && styles.ghostLabel, { color }]}>{label}</Text>
         </View>
       )}
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => ({
   base: {
     borderRadius: SinoRadius.control,
     justifyContent: "center",
@@ -110,35 +99,29 @@ const styles = StyleSheet.create({
   disabled: {
     opacity: 0.45,
   },
-});
-
-const variantStyles = StyleSheet.create({
   primary: {
-    backgroundColor: SinoBrand.primary,
+    backgroundColor: c.primary,
+  },
+  primaryPressed: {
+    backgroundColor: c.primaryPressed,
   },
   secondary: {
-    backgroundColor: SinoBrand.white,
+    backgroundColor: c.surface,
     borderWidth: 1,
-    borderColor: SinoBrand.border,
+    borderColor: c.border,
+  },
+  secondaryPressed: {
+    backgroundColor: c.neutralSoft,
   },
   destructive: {
     borderWidth: 1,
-    borderColor: SinoBrand.destructiveBorder,
+    borderColor: c.destructiveBorder,
+  },
+  destructivePressed: {
+    backgroundColor: c.downSoft,
   },
   ghost: {},
-});
-
-const pressedStyles = StyleSheet.create({
-  primary: {
-    backgroundColor: SinoBrand.primaryPressed,
+  ghostPressed: {
+    backgroundColor: c.neutralSoft,
   },
-  secondary: {
-    backgroundColor: SinoBrand.neutralSoft,
-  },
-  destructive: {
-    backgroundColor: SinoBrand.downSoft,
-  },
-  ghost: {
-    backgroundColor: SinoBrand.neutralSoft,
-  },
-});
+}));

@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "sinoapp",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon"
     },
@@ -30,7 +30,11 @@
         {
           "backgroundColor": "#F8F9FC",
           "image": "./assets/images/splash-mark.png",
-          "imageWidth": 84
+          "imageWidth": 84,
+          "dark": {
+            "image": "./assets/images/splash-mark-dark.png",
+            "backgroundColor": "#0F131A"
+          }
         }
       ],
       "expo-web-browser",

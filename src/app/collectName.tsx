@@ -1,14 +1,16 @@
 import { useState } from "react";
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from "react-native";
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { TextField } from "@/components/ui/text-field";
-import { SinoBrand } from "@/constants/theme";
+
 import { useAuth } from "@/contexts/auth-context";
+import { themedStyles } from "@/hooks/use-colors";
 
 export default function CollectName() {
+  const styles = useStyles();
   const { updateDisplayName, signOut } = useAuth();
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
@@ -78,10 +80,10 @@ export default function CollectName() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => ({
   container: {
     flex: 1,
-    backgroundColor: SinoBrand.background,
+    backgroundColor: c.background,
   },
   keyboardView: {
     flex: 1,
@@ -103,4 +105,4 @@ const styles = StyleSheet.create({
     marginTop: "auto",
     gap: 6,
   },
-});
+}));

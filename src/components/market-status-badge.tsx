@@ -1,12 +1,15 @@
 import { StyleSheet, View } from "react-native";
 
 import { Text } from "@/components/ui/text";
-import { SinoBrand, SinoFonts } from "@/constants/theme";
+import { SinoFonts } from "@/constants/theme";
+import { useColors } from "@/hooks/use-colors";
 
 export function MarketStatusBadge({ open }: { open: boolean }) {
+  const colors = useColors();
+
   return (
-    <View style={[styles.badge, { backgroundColor: open ? SinoBrand.upSoft : SinoBrand.neutralSoft }]}>
-      <View style={[styles.dot, { backgroundColor: open ? SinoBrand.upIcon : SinoBrand.textTertiary }]} />
+    <View style={[styles.badge, { backgroundColor: open ? colors.upSoft : colors.neutralSoft }]}>
+      <View style={[styles.dot, { backgroundColor: open ? colors.upIcon : colors.textTertiary }]} />
       <Text variant="caption" tone={open ? "up" : "secondary"} style={styles.label}>
         {open ? "Pregão aberto · parcial" : "Pregão fechado · números do dia"}
       </Text>

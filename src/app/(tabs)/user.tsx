@@ -2,17 +2,18 @@ import Constants from "expo-constants";
 import * as Haptics from "expo-haptics";
 import { Bell, BellOff, BellRing, List, LogOut, Send, TriangleAlert } from "lucide-react-native";
 import { useState } from "react";
-import { Alert, Linking, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Alert, Linking, Pressable, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { RadioCard } from "@/components/radio-card";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
-import { SinoBrand, SinoFonts, SinoRadius } from "@/constants/theme";
+import { SinoFonts, SinoRadius } from "@/constants/theme";
 import { useAuth } from "@/contexts/auth-context";
 import { useWatchlist } from "@/contexts/watchlist-context";
 import { useNotificationSettings } from "@/hooks/use-notification-settings";
 import { sendSummaryNow, unregisterDevice, type NotificationMode, type SummaryResult } from "@/services/notifications";
+import { themedStyles, useColors } from "@/hooks/use-colors";
 
 const MODE_OPTIONS = [
   {
@@ -43,6 +44,8 @@ const SKIPPED_MESSAGES: Record<Extract<SummaryResult, { status: "skipped" }>["re
 };
 
 export default function User() {
+  const colors = useColors();
+  const styles = useStyles();
   const { user, signOut } = useAuth();
   const { tickers } = useWatchlist();
   const { mode, permission, saving, error, changeMode, enableOnDevice } = useNotificationSettings();
@@ -146,7 +149,7 @@ export default function User() {
               accessibilityRole="button"
               style={({ pressed }) => [styles.notice, styles.noticeAction, pressed && styles.noticePressed]}
             >
-              <BellRing size={17} strokeWidth={1.8} color={SinoBrand.primary} />
+              <BellRing size={17} strokeWidth={1.8} color={colors.primaryText} />
               <Text variant="label" tone="primary" style={styles.noticeText}>
                 Permitir notificações neste iPhone
               </Text>
@@ -159,7 +162,7 @@ export default function User() {
               accessibilityRole="button"
               style={({ pressed }) => [styles.notice, styles.noticeWarning, pressed && styles.noticePressed]}
             >
-              <TriangleAlert size={17} strokeWidth={1.8} color={SinoBrand.down} />
+              <TriangleAlert size={17} strokeWidth={1.8} color={colors.down} />
               <Text variant="label" tone="down" style={styles.noticeText}>
                 As notificações estão bloqueadas no iPhone. Toque pra abrir os Ajustes.
               </Text>
@@ -188,7 +191,7 @@ export default function User() {
           <Button
             variant="secondary"
             label="Enviar resumo agora"
-            icon={<Send size={16} strokeWidth={1.8} color={SinoBrand.ink} />}
+            icon={<Send size={16} strokeWidth={1.8} color={colors.ink} />}
             loading={sending}
             disabled={!notificationsOn}
             onPress={handleSendNow}
@@ -203,7 +206,7 @@ export default function User() {
             variant="ghost"
             size="compact"
             label="Sair da conta"
-            icon={<LogOut size={16} strokeWidth={1.7} color={SinoBrand.textSecondary} />}
+            icon={<LogOut size={16} strokeWidth={1.7} color={colors.textSecondary} />}
             onPress={confirmSignOut}
           />
           <Text variant="caption" tone="tertiary" style={styles.version}>
@@ -215,10 +218,10 @@ export default function User() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => ({
   container: {
     flex: 1,
-    backgroundColor: SinoBrand.background,
+    backgroundColor: c.background,
   },
   content: {
     flexGrow: 1,
@@ -238,14 +241,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     borderRadius: SinoRadius.card,
     borderWidth: 1,
-    borderColor: SinoBrand.cardBorder,
-    backgroundColor: SinoBrand.white,
+    borderColor: c.cardBorder,
+    backgroundColor: c.surface,
   },
   avatar: {
     width: 44,
     height: 44,
     borderRadius: SinoRadius.control,
-    backgroundColor: SinoBrand.primarySoft,
+    backgroundColor: c.primarySoft,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -271,13 +274,13 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 15,
     borderRadius: SinoRadius.control,
-    backgroundColor: SinoBrand.neutralMuted,
+    backgroundColor: c.neutralMuted,
   },
   noticeAction: {
-    backgroundColor: SinoBrand.primaryTint,
+    backgroundColor: c.primaryTint,
   },
   noticeWarning: {
-    backgroundColor: SinoBrand.downSoft,
+    backgroundColor: c.downSoft,
   },
   noticePressed: {
     opacity: 0.8,
@@ -294,4 +297,4 @@ const styles = StyleSheet.create({
   version: {
     textAlign: "center",
   },
-});
+}));

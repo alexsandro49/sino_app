@@ -2,19 +2,22 @@ import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { Check, Plus, Search, X } from "lucide-react-native";
 import { useState } from "react";
-import { ActivityIndicator, Alert, FlatList, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Alert, FlatList, Pressable, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { TickerLogo } from "@/components/ticker-logo";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { TextField } from "@/components/ui/text-field";
-import { SinoBrand, SinoFonts, SinoRadius } from "@/constants/theme";
+import { SinoFonts, SinoRadius } from "@/constants/theme";
 import { useWatchlist } from "@/contexts/watchlist-context";
 import { useTickerSearch } from "@/hooks/use-ticker-search";
 import type { Ticker } from "@/services/market";
+import { themedStyles, useColors } from "@/hooks/use-colors";
 
 export default function AddTicker() {
+  const colors = useColors();
+  const styles = useStyles();
   const router = useRouter();
   const { isFollowing, follow } = useWatchlist();
   const [query, setQuery] = useState("");
@@ -88,10 +91,10 @@ export default function AddTicker() {
           </Text>
         ) : checked ? (
           <View style={styles.checkCircle}>
-            <Check size={14} strokeWidth={2.2} color={SinoBrand.white} />
+            <Check size={14} strokeWidth={2.2} color={colors.onPrimary} />
           </View>
         ) : (
-          <Plus size={18} strokeWidth={1.9} color={SinoBrand.placeholder} />
+          <Plus size={18} strokeWidth={1.9} color={colors.placeholder} />
         )}
       </Pressable>
     );
@@ -110,14 +113,14 @@ export default function AddTicker() {
           hitSlop={8}
           style={({ pressed }) => [styles.closeButton, pressed && styles.closeButtonPressed]}
         >
-          <X size={15} strokeWidth={1.9} color={SinoBrand.textSecondary} />
+          <X size={15} strokeWidth={1.9} color={colors.textSecondary} />
         </Pressable>
       </View>
 
       <View style={styles.searchArea}>
         <TextField
-          leading={<Search size={18} strokeWidth={1.8} color={SinoBrand.primary} />}
-          trailing={loading ? <ActivityIndicator size="small" color={SinoBrand.textTertiary} /> : null}
+          leading={<Search size={18} strokeWidth={1.8} color={colors.primaryText} />}
+          trailing={loading ? <ActivityIndicator size="small" color={colors.textTertiary} /> : null}
           placeholder="Código ou nome da empresa"
           autoCapitalize="characters"
           autoCorrect={false}
@@ -148,7 +151,7 @@ export default function AddTicker() {
               <Text variant="label" tone="primary" style={styles.chipText}>
                 {ticker.symbol}
               </Text>
-              <X size={13} strokeWidth={2.2} color={SinoBrand.primary} />
+              <X size={13} strokeWidth={2.2} color={colors.primaryText} />
             </Pressable>
           ))}
         </ScrollView>
@@ -189,10 +192,10 @@ export default function AddTicker() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => ({
   container: {
     flex: 1,
-    backgroundColor: SinoBrand.white,
+    backgroundColor: c.surface,
     paddingTop: 22,
   },
   header: {
@@ -206,12 +209,12 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 9,
-    backgroundColor: SinoBrand.neutralSoft,
+    backgroundColor: c.neutralSoft,
     alignItems: "center",
     justifyContent: "center",
   },
   closeButtonPressed: {
-    backgroundColor: SinoBrand.border,
+    backgroundColor: c.border,
   },
   searchArea: {
     paddingHorizontal: 20,
@@ -236,7 +239,7 @@ const styles = StyleSheet.create({
     paddingLeft: 12,
     paddingRight: 10,
     borderRadius: 8,
-    backgroundColor: SinoBrand.primarySoft,
+    backgroundColor: c.primarySoft,
   },
   chipPressed: {
     opacity: 0.7,
@@ -262,7 +265,7 @@ const styles = StyleSheet.create({
     borderRadius: SinoRadius.control,
   },
   itemHighlighted: {
-    backgroundColor: SinoBrand.primaryTint,
+    backgroundColor: c.primaryTint,
   },
   itemDisabled: {
     opacity: 0.5,
@@ -279,7 +282,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: SinoBrand.primary,
+    backgroundColor: c.primary,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -293,4 +296,4 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 12,
   },
-});
+}));

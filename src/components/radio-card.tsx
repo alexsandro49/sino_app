@@ -1,8 +1,9 @@
 import type { LucideIcon } from "lucide-react-native";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, View } from "react-native";
 
 import { Text } from "@/components/ui/text";
-import { SinoBrand, SinoRadius } from "@/constants/theme";
+import { SinoRadius } from "@/constants/theme";
+import { themedStyles, useColors } from "@/hooks/use-colors";
 
 type RadioCardProps = {
   icon: LucideIcon;
@@ -14,6 +15,8 @@ type RadioCardProps = {
 };
 
 export function RadioCard({ icon: Icon, title, description, selected, disabled = false, onPress }: RadioCardProps) {
+  const colors = useColors();
+  const styles = useStyles();
   return (
     <Pressable
       onPress={onPress}
@@ -28,7 +31,7 @@ export function RadioCard({ icon: Icon, title, description, selected, disabled =
       ]}
     >
       <View style={[styles.iconBox, selected && styles.iconBoxSelected]}>
-        <Icon size={18} strokeWidth={1.7} color={selected ? SinoBrand.primary : SinoBrand.textSecondary} />
+        <Icon size={18} strokeWidth={1.7} color={selected ? colors.primaryText : colors.textSecondary} />
       </View>
       <View style={styles.text}>
         <Text variant="ticker" style={styles.title}>
@@ -45,7 +48,7 @@ export function RadioCard({ icon: Icon, title, description, selected, disabled =
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((c) => ({
   card: {
     flexDirection: "row",
     gap: 12,
@@ -53,28 +56,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: SinoRadius.card,
     borderWidth: 1,
-    borderColor: SinoBrand.cardBorder,
-    backgroundColor: SinoBrand.white,
+    borderColor: c.cardBorder,
+    backgroundColor: c.surface,
   },
   cardSelected: {
     borderWidth: 1.5,
-    borderColor: SinoBrand.primary,
+    borderColor: c.primaryText,
     paddingVertical: 12.5,
     paddingHorizontal: 13.5,
   },
   cardPressed: {
-    backgroundColor: SinoBrand.neutralSoft,
+    backgroundColor: c.neutralSoft,
   },
   iconBox: {
     width: 36,
     height: 36,
     borderRadius: SinoRadius.icon,
-    backgroundColor: SinoBrand.neutralSoft,
+    backgroundColor: c.neutralSoft,
     alignItems: "center",
     justifyContent: "center",
   },
   iconBoxSelected: {
-    backgroundColor: SinoBrand.primarySoft,
+    backgroundColor: c.primarySoft,
   },
   text: {
     flex: 1,
@@ -93,17 +96,17 @@ const styles = StyleSheet.create({
     marginTop: 2,
     borderRadius: 10,
     borderWidth: 1.5,
-    borderColor: "#CFD5E0",
+    borderColor: c.radioBorder,
     alignItems: "center",
     justifyContent: "center",
   },
   radioSelected: {
-    borderColor: SinoBrand.primary,
+    borderColor: c.primaryText,
   },
   radioDot: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: SinoBrand.primary,
+    backgroundColor: c.primaryText,
   },
-});
+}));

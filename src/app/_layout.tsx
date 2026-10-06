@@ -4,31 +4,20 @@ import {
   PlusJakartaSans_600SemiBold,
   useFonts,
 } from "@expo-google-fonts/plus-jakarta-sans";
-import { DefaultTheme, Stack, ThemeProvider, useRouter } from "expo-router";
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider, useRouter, type Theme } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useColorScheme } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { AnimatedSplash } from "@/components/animated-splash";
 import { NotificationRouter } from "@/components/notification-router";
-import { SinoBrand } from "@/constants/theme";
 import { AuthProvider, useAuth } from "@/contexts/auth-context";
 import { WatchlistProvider } from "@/contexts/watchlist-context";
+import { useColors } from "@/hooks/use-colors";
 
 SplashScreen.preventAutoHideAsync();
-
-const navigationTheme = {
-  ...DefaultTheme,
-  colors: {
-    ...DefaultTheme.colors,
-    primary: SinoBrand.primary,
-    background: SinoBrand.background,
-    card: SinoBrand.background,
-    text: SinoBrand.ink,
-    border: SinoBrand.divider,
-  },
-};
 
 function AuthRouter() {
   const router = useRouter();
@@ -61,6 +50,23 @@ export default function RootLayout() {
     PlusJakartaSans_500Medium,
     PlusJakartaSans_600SemiBold,
   });
+  const scheme = useColorScheme();
+  const colors = useColors();
+
+  const navigationTheme = useMemo<Theme>(() => {
+    const base = scheme === "dark" ? DarkTheme : DefaultTheme;
+    return {
+      ...base,
+      colors: {
+        ...base.colors,
+        primary: colors.primaryText,
+        background: colors.background,
+        card: colors.background,
+        text: colors.ink,
+        border: colors.divider,
+      },
+    };
+  }, [scheme, colors]);
 
   if (!fontsLoaded && !fontError) {
     return null;
@@ -71,11 +77,11 @@ export default function RootLayout() {
       <AuthProvider>
         <WatchlistProvider>
           <ThemeProvider value={navigationTheme}>
-            <StatusBar style="dark" />
+            <StatusBar style="auto" />
             <AuthRouter />
             <NotificationRouter />
             <Stack
-              screenOptions={{ headerShown: false, contentStyle: { backgroundColor: SinoBrand.background } }}
+              screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}
               initialRouteName="signIn"
             >
               <Stack.Screen
@@ -85,7 +91,7 @@ export default function RootLayout() {
                   sheetAllowedDetents: [0.92],
                   sheetGrabberVisible: true,
                   sheetCornerRadius: 22,
-                  contentStyle: { backgroundColor: SinoBrand.white },
+                  contentStyle: { backgroundColor: colors.surface },
                 }}
               />
               <Stack.Screen
@@ -95,7 +101,7 @@ export default function RootLayout() {
                   sheetAllowedDetents: [0.88],
                   sheetGrabberVisible: true,
                   sheetCornerRadius: 22,
-                  contentStyle: { backgroundColor: SinoBrand.white },
+                  contentStyle: { backgroundColor: colors.surface },
                 }}
               />
             </Stack>
