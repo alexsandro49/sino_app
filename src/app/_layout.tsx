@@ -7,9 +7,10 @@ import {
 import { DefaultTheme, Stack, ThemeProvider, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
+import { AnimatedSplash } from "@/components/animated-splash";
 import { NotificationRouter } from "@/components/notification-router";
 import { SinoBrand } from "@/constants/theme";
 import { AuthProvider, useAuth } from "@/contexts/auth-context";
@@ -36,8 +37,6 @@ function AuthRouter() {
   useEffect(() => {
     if (loading) return;
 
-    SplashScreen.hideAsync();
-
     if (!user) {
       router.replace("/signIn");
       return;
@@ -46,6 +45,14 @@ function AuthRouter() {
   }, [loading, user, isProfileComplete, router]);
 
   return null;
+}
+
+function SplashGate() {
+  const { loading } = useAuth();
+  const [visible, setVisible] = useState(true);
+  const hide = useCallback(() => setVisible(false), []);
+
+  return visible ? <AnimatedSplash ready={!loading} onFinish={hide} /> : null;
 }
 
 export default function RootLayout() {
@@ -92,6 +99,7 @@ export default function RootLayout() {
                 }}
               />
             </Stack>
+            <SplashGate />
           </ThemeProvider>
         </WatchlistProvider>
       </AuthProvider>
