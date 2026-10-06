@@ -17,7 +17,7 @@ import { isMarketOpen } from "@/services/market";
 export default function HomeScreen() {
   const router = useRouter();
   const { user } = useAuth();
-  const { tickers, loading: watchlistLoading, unfollow } = useWatchlist();
+  const { tickers, loading: watchlistLoading, error: watchlistError, unfollow } = useWatchlist();
   const { quotes, loading: quotesLoading, error, refresh } = useQuotes(
     tickers.map((ticker) => ticker.symbol),
   );
@@ -64,8 +64,8 @@ export default function HomeScreen() {
           )}
           ListFooterComponent={
             <ThemedText style={styles.footnote}>
-              {error
-                ? error
+              {watchlistError ?? error
+                ? watchlistError ?? error
                 : marketOpen
                   ? "Variação desde o fechamento anterior. O pregão fecha às 18:00. Puxe pra atualizar."
                   : "Variação final do último pregão em relação ao fechamento anterior."}

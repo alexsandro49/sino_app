@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router";
 import { Check, Plus, Search, X } from "lucide-react-native";
 import { useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, TextInput, View } from "react-native";
+import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/themed-text";
@@ -16,12 +16,23 @@ export default function AddTicker() {
   const { isFollowing, follow } = useWatchlist();
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Ticker | null>(null);
+  const [saving, setSaving] = useState(false);
   const { results, loading, error } = useTickerSearch(query);
 
   async function handleAdd() {
     if (!selected) return;
-    await follow(selected);
-    router.back();
+    setSaving(true);
+    try {
+      await follow(selected);
+      router.back();
+    } catch (err) {
+      Alert.alert(
+        `Não deu pra adicionar ${selected.symbol}`,
+        err instanceof Error ? err.message : "Tente novamente.",
+      );
+    } finally {
+      setSaving(false);
+    }
   }
 
   function renderItem({ item }: { item: Ticker }) {
@@ -105,6 +116,7 @@ export default function AddTicker() {
         <Button
           label={selected ? `Adicionar ${selected.symbol}` : "Escolha um ticker"}
           disabled={!selected}
+          loading={saving}
           onPress={handleAdd}
         />
       </View>

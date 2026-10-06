@@ -51,3 +51,4 @@ example
 firebase-debug.log
 functions/lib/
 !.env.example
+functions/.secret.local

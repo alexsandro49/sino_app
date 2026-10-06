@@ -1,16 +1,21 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-
+import { apiDelete, apiGet, apiPost } from "@/services/api";
 import type { Ticker } from "@/services/market";
 
-function storageKey(userId: string) {
-  return `sino:watchlist:${userId}`;
+type WatchlistResponse = {
+  tickers: Ticker[];
+};
+
+export async function fetchWatchlist(): Promise<Ticker[]> {
+  const { tickers } = await apiGet<WatchlistResponse>("/watchlist");
+  return tickers;
 }
 
-export async function loadWatchlist(userId: string): Promise<Ticker[]> {
-  const stored = await AsyncStorage.getItem(storageKey(userId));
-  return stored ? (JSON.parse(stored) as Ticker[]) : [];
+export async function addToWatchlist(ticker: Ticker): Promise<Ticker[]> {
+  const { tickers } = await apiPost<WatchlistResponse>("/watchlist", ticker);
+  return tickers;
 }
 
-export async function saveWatchlist(userId: string, tickers: Ticker[]): Promise<void> {
-  await AsyncStorage.setItem(storageKey(userId), JSON.stringify(tickers));
+export async function removeFromWatchlist(symbol: string): Promise<Ticker[]> {
+  const { tickers } = await apiDelete<WatchlistResponse>(`/watchlist/${encodeURIComponent(symbol)}`);
+  return tickers;
 }
