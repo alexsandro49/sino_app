@@ -1,11 +1,11 @@
 import { FontAwesome } from "@expo/vector-icons";
-import { Bell } from "lucide-react-native";
 import { useState } from "react";
 import { Alert, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { SinoMark } from "@/components/sino-mark";
 import { Button } from "@/components/ui/button";
-import { ThemedText } from "@/components/themed-text";
+import { Text } from "@/components/ui/text";
 import { SinoBrand } from "@/constants/theme";
 import { useAuth } from "@/contexts/auth-context";
 
@@ -18,12 +18,12 @@ export default function SignIn() {
     try {
       const { error } = await signInWithGoogle();
       if (error) {
-        Alert.alert("Erro ao entrar com Google", error);
+        Alert.alert("Não deu pra entrar com o Google", error);
       }
     } catch (err) {
       Alert.alert(
-        "Erro inesperado",
-        err instanceof Error ? err.message : "Não foi possível entrar com Google.",
+        "Não deu pra entrar com o Google",
+        err instanceof Error ? err.message : "Tente de novo em instantes.",
       );
     } finally {
       setLoading(false);
@@ -31,22 +31,28 @@ export default function SignIn() {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: SinoBrand.white }]}>
-      <View style={styles.centeredGroup}>
-        <View style={styles.centerSection}>
-          <Bell size={52} strokeWidth={2} color={SinoBrand.primary} />
-          <ThemedText style={[styles.titleText, { color: SinoBrand.ink }]}>Sino</ThemedText>
-        </View>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.brand}>
+        <SinoMark size={58} />
+        <Text variant="display" style={styles.wordmark}>
+          Sino
+        </Text>
+        <Text variant="body" tone="secondary" style={styles.tagline}>
+          Suas ações favoritas, resumidas quando o pregão fecha.
+        </Text>
+      </View>
 
-        <View style={styles.bottomSection}>
-          <Button
-            variant="outlined"
-            label="Continuar com Google"
-            icon={<FontAwesome name="google" size={18} color={SinoBrand.primary} />}
-            onPress={handleGoogleLogin}
-            loading={loading}
-          />
-        </View>
+      <View style={styles.actions}>
+        <Button
+          variant="secondary"
+          label="Continuar com Google"
+          icon={<FontAwesome name="google" size={17} color={SinoBrand.primary} />}
+          onPress={handleGoogleLogin}
+          loading={loading}
+        />
+        <Text variant="caption" tone="tertiary" style={styles.footnote}>
+          Sem senha. Você entra com a sua conta Google.
+        </Text>
       </View>
     </SafeAreaView>
   );
@@ -55,25 +61,28 @@ export default function SignIn() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 20,
+    backgroundColor: SinoBrand.background,
   },
-  centeredGroup: {
+  brand: {
     flex: 1,
-    justifyContent: "center",
-    gap: 40,
-  },
-  centerSection: {
     alignItems: "center",
-    gap: 10,
-  },
-  titleText: {
-    fontSize: 34,
-    lineHeight: 40,
-    fontWeight: "600",
-    letterSpacing: 0.5,
-  },
-  bottomSection: {
-    width: "100%",
+    justifyContent: "center",
     gap: 14,
+    paddingHorizontal: 34,
+  },
+  wordmark: {
+    marginTop: 6,
+  },
+  tagline: {
+    textAlign: "center",
+    maxWidth: 248,
+  },
+  actions: {
+    paddingHorizontal: 26,
+    paddingBottom: 24,
+    gap: 14,
+  },
+  footnote: {
+    textAlign: "center",
   },
 });

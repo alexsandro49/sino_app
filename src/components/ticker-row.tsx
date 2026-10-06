@@ -1,13 +1,14 @@
 import { Minus, TrendingDown, TrendingUp } from "lucide-react-native";
 import { Pressable, StyleSheet, View } from "react-native";
 
-import { ThemedText } from "@/components/themed-text";
-import { SinoBrand } from "@/constants/theme";
+import { Text } from "@/components/ui/text";
+import { SinoBrand, SinoRadius } from "@/constants/theme";
 import type { Quote, Ticker } from "@/services/market";
 
 type TickerRowProps = {
   ticker: Ticker;
   quote?: Quote;
+  pending?: boolean;
   onLongPress?: () => void;
 };
 
@@ -21,49 +22,90 @@ const priceFormatter = new Intl.NumberFormat("pt-BR", {
   currency: "BRL",
 });
 
-function trendOf(changePercent: number | undefined) {
-  if (changePercent === undefined || Math.abs(changePercent) < 0.005) {
-    return { Icon: Minus, color: SinoBrand.textSecondary, iconColor: SinoBrand.textSecondary, background: SinoBrand.neutralSoft };
+const FLAT_THRESHOLD = 0.005;
+
+function trendOf(changePercent: number) {
+  if (Math.abs(changePercent) < FLAT_THRESHOLD) {
+    return { Icon: Minus, tone: "secondary", iconColor: SinoBrand.textSecondary, background: SinoBrand.neutralSoft } as const;
   }
   if (changePercent > 0) {
-    return { Icon: TrendingUp, color: SinoBrand.up, iconColor: SinoBrand.upIcon, background: SinoBrand.upSoft };
+    return { Icon: TrendingUp, tone: "up", iconColor: SinoBrand.upIcon, background: SinoBrand.upSoft } as const;
   }
-  return { Icon: TrendingDown, color: SinoBrand.down, iconColor: SinoBrand.down, background: SinoBrand.downSoft };
+  return { Icon: TrendingDown, tone: "down", iconColor: SinoBrand.down, background: SinoBrand.downSoft } as const;
 }
 
 function formatChange(changePercent: number) {
-  const sign = changePercent > 0.005 ? "+" : changePercent < -0.005 ? "−" : "";
+  if (Math.abs(changePercent) < FLAT_THRESHOLD) return "0,00%";
+  const sign = changePercent > 0 ? "+" : "−";
   return `${sign}${percentFormatter.format(Math.abs(changePercent))}%`;
 }
 
-export function TickerRow({ ticker, quote, onLongPress }: TickerRowProps) {
-  const trend = trendOf(quote?.changePercent);
+export function TickerRow({ ticker, quote, pending = false, onLongPress }: TickerRowProps) {
+  const trend = quote ? trendOf(quote.changePercent) : null;
 
   return (
     <Pressable
-      style={styles.card}
       onLongPress={onLongPress}
+      delayLongPress={350}
       accessibilityRole="button"
+      accessibilityLabel={
+        quote ? `${ticker.symbol}, ${formatChange(quote.changePercent)}, ${priceFormatter.format(quote.price)}` : ticker.symbol
+      }
       accessibilityHint="Segure para deixar de seguir"
+      style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
     >
-      <View style={[styles.iconBox, { backgroundColor: trend.background }]}>
-        <trend.Icon size={19} strokeWidth={1.9} color={trend.iconColor} />
+      <View style={[styles.iconBox, { backgroundColor: trend?.background ?? SinoBrand.neutralSoft }]}>
+        {trend ? <trend.Icon size={19} strokeWidth={1.9} color={trend.iconColor} /> : null}
       </View>
 
       <View style={styles.info}>
-        <ThemedText style={styles.symbol}>{ticker.symbol}</ThemedText>
-        <ThemedText style={styles.name} numberOfLines={1}>
+        <Text variant="ticker">{ticker.symbol}</Text>
+        <Text variant="caption" tone="secondary" numberOfLines={1}>
           {ticker.name}
-        </ThemedText>
+        </Text>
       </View>
 
-      <View style={styles.values}>
-        <ThemedText style={[styles.change, { color: trend.color }]}>
-          {quote ? formatChange(quote.changePercent) : "—"}
-        </ThemedText>
-        <ThemedText style={styles.price}>{quote ? priceFormatter.format(quote.price) : ""}</ThemedText>
-      </View>
+      {quote && trend ? (
+        <View style={styles.values}>
+          <Text variant="value" tone={trend.tone}>
+            {formatChange(quote.changePercent)}
+          </Text>
+          <Text variant="caption" tone="tertiary">
+            {priceFormatter.format(quote.price)}
+          </Text>
+        </View>
+      ) : pending ? (
+        <View style={styles.values}>
+          <View style={[styles.skeleton, styles.skeletonValue]} />
+          <View style={[styles.skeleton, styles.skeletonPrice]} />
+        </View>
+      ) : (
+        <View style={styles.values}>
+          <Text variant="value" tone="tertiary">
+            —
+          </Text>
+          <Text variant="caption" tone="tertiary">
+            sem cotação
+          </Text>
+        </View>
+      )}
     </Pressable>
+  );
+}
+
+export function TickerRowSkeleton() {
+  return (
+    <View style={styles.card}>
+      <View style={[styles.iconBox, { backgroundColor: SinoBrand.neutralSoft }]} />
+      <View style={styles.info}>
+        <View style={[styles.skeleton, styles.skeletonSymbol]} />
+        <View style={[styles.skeleton, styles.skeletonName]} />
+      </View>
+      <View style={styles.values}>
+        <View style={[styles.skeleton, styles.skeletonValue]} />
+        <View style={[styles.skeleton, styles.skeletonPrice]} />
+      </View>
+    </View>
   );
 }
 
@@ -74,15 +116,18 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 13,
     paddingHorizontal: 15,
-    borderRadius: 14,
+    borderRadius: SinoRadius.card,
     borderWidth: 1,
     borderColor: SinoBrand.cardBorder,
     backgroundColor: SinoBrand.white,
   },
+  cardPressed: {
+    backgroundColor: SinoBrand.neutralSoft,
+  },
   iconBox: {
     width: 38,
     height: 38,
-    borderRadius: 10,
+    borderRadius: SinoRadius.icon,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -90,32 +135,29 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 2,
   },
-  symbol: {
-    fontSize: 15.5,
-    lineHeight: 20,
-    fontWeight: "600",
-    color: SinoBrand.ink,
-  },
-  name: {
-    fontSize: 12.5,
-    lineHeight: 16,
-    fontWeight: "400",
-    color: SinoBrand.textSecondary,
-  },
   values: {
     alignItems: "flex-end",
-    gap: 2,
+    gap: 4,
   },
-  change: {
-    fontSize: 16.5,
-    lineHeight: 21,
-    fontWeight: "600",
-    letterSpacing: -0.15,
+  skeleton: {
+    borderRadius: 4,
+    backgroundColor: SinoBrand.skeleton,
   },
-  price: {
-    fontSize: 12.5,
-    lineHeight: 16,
-    fontWeight: "400",
-    color: SinoBrand.textTertiary,
+  skeletonSymbol: {
+    width: 64,
+    height: 14,
+  },
+  skeletonName: {
+    width: 120,
+    height: 11,
+    marginTop: 4,
+  },
+  skeletonValue: {
+    width: 56,
+    height: 15,
+  },
+  skeletonPrice: {
+    width: 44,
+    height: 11,
   },
 });

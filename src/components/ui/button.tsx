@@ -1,99 +1,144 @@
 import type { ReactNode } from "react";
 import {
   ActivityIndicator,
+  Pressable,
   StyleSheet,
-  TouchableOpacity,
   View,
   type StyleProp,
   type ViewStyle,
 } from "react-native";
 
-import { ThemedText } from "@/components/themed-text";
-import { SinoBrand } from "@/constants/theme";
+import { Text } from "@/components/ui/text";
+import { SinoBrand, SinoFonts, SinoRadius } from "@/constants/theme";
 
-type ButtonVariant = "primary" | "outlined";
+type ButtonVariant = "primary" | "secondary" | "destructive" | "ghost";
+type ButtonSize = "regular" | "compact";
 
 type ButtonProps = {
   label: string;
   onPress?: () => void;
   variant?: ButtonVariant;
+  size?: ButtonSize;
   loading?: boolean;
   disabled?: boolean;
   icon?: ReactNode;
   style?: StyleProp<ViewStyle>;
 };
 
+const labelColor: Record<ButtonVariant, string> = {
+  primary: SinoBrand.white,
+  secondary: SinoBrand.ink,
+  destructive: SinoBrand.down,
+  ghost: SinoBrand.textSecondary,
+};
+
 export function Button({
   label,
   onPress,
   variant = "primary",
+  size = "regular",
   loading = false,
   disabled = false,
   icon,
   style,
 }: ButtonProps) {
-  const isPrimary = variant === "primary";
   const isDisabled = disabled || loading;
 
   return (
-    <TouchableOpacity
-      style={[
+    <Pressable
+      onPress={onPress}
+      disabled={isDisabled}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: isDisabled, busy: loading }}
+      style={({ pressed }) => [
         styles.base,
-        isPrimary ? styles.primary : styles.outlined,
+        size === "compact" ? styles.compact : styles.regular,
+        variantStyles[variant],
+        pressed && pressedStyles[variant],
         isDisabled && styles.disabled,
         style,
       ]}
-      activeOpacity={0.7}
-      onPress={onPress}
-      disabled={isDisabled}
     >
       {loading ? (
-        <ActivityIndicator color={isPrimary ? SinoBrand.white : SinoBrand.ink} />
+        <ActivityIndicator color={labelColor[variant]} />
       ) : (
         <View style={styles.content}>
           {icon}
-          <ThemedText style={[styles.label, isPrimary ? styles.primaryLabel : styles.outlinedLabel]}>
+          <Text
+            style={[
+              styles.label,
+              variant === "ghost" && styles.ghostLabel,
+              { color: labelColor[variant] },
+            ]}
+          >
             {label}
-          </ThemedText>
+          </Text>
         </View>
       )}
-    </TouchableOpacity>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   base: {
-    width: "100%",
-    height: 52,
-    borderRadius: 10,
+    borderRadius: SinoRadius.control,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 16,
+  },
+  regular: {
+    height: 52,
+    paddingHorizontal: 18,
+  },
+  compact: {
+    height: 46,
+    paddingHorizontal: 18,
   },
   content: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: 9,
   },
+  label: {
+    fontFamily: SinoFonts.semibold,
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  ghostLabel: {
+    fontFamily: SinoFonts.medium,
+    fontSize: 14,
+  },
+  disabled: {
+    opacity: 0.45,
+  },
+});
+
+const variantStyles = StyleSheet.create({
   primary: {
     backgroundColor: SinoBrand.primary,
   },
-  outlined: {
+  secondary: {
+    backgroundColor: SinoBrand.white,
     borderWidth: 1,
     borderColor: SinoBrand.border,
-    backgroundColor: SinoBrand.white,
   },
-  disabled: {
-    opacity: 0.6,
+  destructive: {
+    borderWidth: 1,
+    borderColor: SinoBrand.destructiveBorder,
   },
-  label: {
-    fontSize: 15,
-    fontWeight: "600",
+  ghost: {},
+});
+
+const pressedStyles = StyleSheet.create({
+  primary: {
+    backgroundColor: SinoBrand.primaryPressed,
   },
-  primaryLabel: {
-    color: SinoBrand.white,
+  secondary: {
+    backgroundColor: SinoBrand.neutralSoft,
   },
-  outlinedLabel: {
-    color: SinoBrand.ink,
+  destructive: {
+    backgroundColor: SinoBrand.downSoft,
+  },
+  ghost: {
+    backgroundColor: SinoBrand.neutralSoft,
   },
 });

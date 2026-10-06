@@ -4,16 +4,18 @@ import { getQuotes, type Quote } from "@/services/market";
 
 export function useQuotes(symbols: string[]) {
   const [quotes, setQuotes] = useState<Record<string, Quote>>({});
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(symbols.length > 0);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const symbolsKey = symbols.join(",");
 
-  const refresh = useCallback(async () => {
+  const load = useCallback(async () => {
     const requested = symbolsKey ? symbolsKey.split(",") : [];
 
     if (requested.length === 0) {
       setQuotes({});
+      setLoading(false);
       return;
     }
 
@@ -29,9 +31,15 @@ export function useQuotes(symbols: string[]) {
     }
   }, [symbolsKey]);
 
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
+  const refresh = useCallback(async () => {
+    setRefreshing(true);
+    await load();
+    setRefreshing(false);
+  }, [load]);
 
-  return { quotes, loading, error, refresh };
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  return { quotes, loading, refreshing, error, refresh };
 }

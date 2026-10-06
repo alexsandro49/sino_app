@@ -1,32 +1,45 @@
 import { Tabs } from "expo-router";
-import { CircleUserRound, House } from "lucide-react-native";
+import { ChartColumn, UserRound } from "lucide-react-native";
 
-import { useTheme } from "@/hooks/use-theme";
+import { SinoBrand, SinoFonts } from "@/constants/theme";
 
 export default function TabsLayout() {
-  const theme = useTheme();
-
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: theme.text,
-        tabBarInactiveTintColor: theme.textSecondary,
-        tabBarStyle: { backgroundColor: theme.background },
+        tabBarActiveTintColor: SinoBrand.primary,
+        tabBarInactiveTintColor: SinoBrand.textTertiary,
+        tabBarStyle: {
+          backgroundColor: SinoBrand.background,
+          borderTopColor: SinoBrand.divider,
+          borderTopWidth: 1,
+          elevation: 0,
+          shadowOpacity: 0,
+        },
+        tabBarLabelStyle: {
+          fontFamily: SinoFonts.medium,
+          fontSize: 12,
+        },
+        sceneStyle: { backgroundColor: SinoBrand.background },
       }}
     >
       <Tabs.Screen
         name="homeScreen"
         options={{
-          title: "Home",
-          tabBarIcon: ({ color, size }) => <House color={color} size={size} />,
+          title: "Carteira",
+          tabBarIcon: ({ color, focused }) => (
+            <ChartColumn color={color} size={21} strokeWidth={focused ? 1.8 : 1.7} />
+          ),
         }}
       />
       <Tabs.Screen
         name="user"
         options={{
-          title: "Usuário",
-          tabBarIcon: ({ color, size }) => <CircleUserRound color={color} size={size} />,
+          title: "Perfil",
+          tabBarIcon: ({ color, focused }) => (
+            <UserRound color={color} size={21} strokeWidth={focused ? 1.8 : 1.7} />
+          ),
         }}
       />
     </Tabs>

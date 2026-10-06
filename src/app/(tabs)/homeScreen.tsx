@@ -1,90 +1,148 @@
 import { useRouter } from "expo-router";
 import { Plus } from "lucide-react-native";
-import { Alert, FlatList, RefreshControl, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { MarketStatusBadge } from "@/components/market-status-badge";
-import { ThemedText } from "@/components/themed-text";
-import { TickerRow } from "@/components/ticker-row";
+import { SinoMark } from "@/components/sino-mark";
+import { TickerRow, TickerRowSkeleton } from "@/components/ticker-row";
 import { Button } from "@/components/ui/button";
-import { SinoBrand } from "@/constants/theme";
+import { Text } from "@/components/ui/text";
+import { SinoBrand, SinoRadius } from "@/constants/theme";
 import { useAuth } from "@/contexts/auth-context";
 import { useWatchlist } from "@/contexts/watchlist-context";
 import { useQuotes } from "@/hooks/use-quotes";
 import type { Ticker } from "@/services/market";
 import { isMarketOpen } from "@/services/market";
 
+const todayFormatter = new Intl.DateTimeFormat("pt-BR", {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  timeZone: "America/Sao_Paulo",
+});
+
+function formatToday() {
+  const [weekday, ...rest] = todayFormatter.format(new Date()).split(", ");
+  const shortWeekday = weekday.replace("-feira", "");
+  return [shortWeekday.charAt(0).toUpperCase() + shortWeekday.slice(1), ...rest].join(", ");
+}
+
 export default function HomeScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const { tickers, loading: watchlistLoading, error: watchlistError, unfollow } = useWatchlist();
-  const { quotes, loading: quotesLoading, error, refresh } = useQuotes(
-    tickers.map((ticker) => ticker.symbol),
-  );
+  const {
+    quotes,
+    loading: quotesLoading,
+    refreshing,
+    error: quotesError,
+    refresh,
+  } = useQuotes(tickers.map((ticker) => ticker.symbol));
 
   const marketOpen = isMarketOpen();
   const firstName = user?.name?.split(" ")[0];
+  const isEmpty = !watchlistLoading && tickers.length === 0;
 
   function openAddTicker() {
     router.push("/addTicker");
   }
 
   function confirmUnfollow(ticker: Ticker) {
-    Alert.alert(`Deixar de seguir ${ticker.symbol}?`, "Você para de receber a variação dele.", [
+    Alert.alert(`Deixar de seguir ${ticker.symbol}?`, "Ele sai da sua carteira e dos avisos do fim do pregão.", [
       { text: "Cancelar", style: "cancel" },
       { text: "Deixar de seguir", style: "destructive", onPress: () => unfollow(ticker.symbol) },
     ]);
   }
 
-  const isEmpty = !watchlistLoading && tickers.length === 0;
+  const footnote = watchlistError
+    ? watchlistError
+    : quotesError
+      ? quotesError
+      : marketOpen
+        ? "Variação desde o último fechamento. O pregão fecha às 18:00, puxe a lista pra atualizar."
+        : "Números finais do último pregão, comparados ao fechamento anterior.";
 
   return (
     <SafeAreaView edges={["top"]} style={styles.container}>
       <View style={styles.header}>
-        <ThemedText style={styles.greetingText}>{firstName ? `Olá, ${firstName}` : "Olá"}</ThemedText>
-        {!isEmpty && <MarketStatusBadge open={marketOpen} />}
+        <Text variant="title">{firstName ? `Olá, ${firstName}` : "Olá"}</Text>
+        {isEmpty || watchlistLoading ? (
+          <Text variant="body" tone="secondary" style={styles.date}>
+            {formatToday()}
+          </Text>
+        ) : (
+          <MarketStatusBadge open={marketOpen} />
+        )}
       </View>
 
-      {isEmpty ? (
-        <View style={styles.emptyContainer}>
-          <ThemedText style={styles.emptyTitle}>Nenhum ticket ainda</ThemedText>
-          <ThemedText style={styles.emptyMessage}>
-            Adicione as ações que você quer acompanhar. No fim do pregão o Sino te avisa.
-          </ThemedText>
-          <Button label="+ Cadastrar o primeiro" style={styles.emptyButton} onPress={openAddTicker} />
+      {watchlistLoading ? (
+        <View style={styles.list}>
+          <TickerRowSkeleton />
+          <TickerRowSkeleton />
+          <TickerRowSkeleton />
+        </View>
+      ) : isEmpty ? (
+        <View style={styles.empty}>
+          <SinoMark size={48} muted />
+          <View style={styles.emptyText}>
+            <Text variant="heading" style={styles.centered}>
+              Nenhum ticket ainda
+            </Text>
+            <Text variant="body" tone="secondary" style={[styles.centered, styles.emptyMessage]}>
+              Adicione as ações que você quer acompanhar. No fim do pregão o Sino te avisa.
+            </Text>
+          </View>
+          <Button
+            label="Cadastrar o primeiro"
+            size="compact"
+            icon={<Plus size={17} strokeWidth={2} color={SinoBrand.white} />}
+            onPress={openAddTicker}
+          />
+          {watchlistError ? (
+            <Text variant="caption" tone="down" style={styles.centered}>
+              {watchlistError}
+            </Text>
+          ) : null}
         </View>
       ) : (
         <FlatList
           data={tickers}
           keyExtractor={(ticker) => ticker.symbol}
           contentContainerStyle={styles.list}
-          refreshControl={<RefreshControl refreshing={quotesLoading} onRefresh={refresh} />}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={SinoBrand.textTertiary} />
+          }
           renderItem={({ item }) => (
-            <TickerRow ticker={item} quote={quotes[item.symbol]} onLongPress={() => confirmUnfollow(item)} />
+            <TickerRow
+              ticker={item}
+              quote={quotes[item.symbol]}
+              pending={quotesLoading}
+              onLongPress={() => confirmUnfollow(item)}
+            />
           )}
           ListFooterComponent={
-            <ThemedText style={styles.footnote}>
-              {watchlistError ?? error
-                ? watchlistError ?? error
-                : marketOpen
-                  ? "Variação desde o fechamento anterior. O pregão fecha às 18:00. Puxe pra atualizar."
-                  : "Variação final do último pregão em relação ao fechamento anterior."}
-            </ThemedText>
+            <Text
+              variant="caption"
+              tone={watchlistError || quotesError ? "down" : "tertiary"}
+              style={styles.footnote}
+            >
+              {footnote}
+            </Text>
           }
         />
       )}
 
-      {!isEmpty && (
-        <TouchableOpacity
-          style={styles.fabButton}
-          activeOpacity={0.8}
+      {!isEmpty && !watchlistLoading ? (
+        <Pressable
           onPress={openAddTicker}
-          accessibilityLabel="Cadastrar ticket"
+          accessibilityLabel="Adicionar ticket"
           accessibilityRole="button"
+          style={({ pressed }) => [styles.fab, pressed && styles.fabPressed]}
         >
           <Plus size={25} color={SinoBrand.white} strokeWidth={2} />
-        </TouchableOpacity>
-      )}
+        </Pressable>
+      ) : null}
     </SafeAreaView>
   );
 }
@@ -100,61 +158,51 @@ const styles = StyleSheet.create({
     paddingBottom: 14,
     gap: 8,
   },
-  greetingText: {
-    fontSize: 25,
-    lineHeight: 30,
-    fontWeight: "600",
-    letterSpacing: -0.75,
-    color: SinoBrand.ink,
+  date: {
+    fontSize: 14,
+    lineHeight: 19,
+    marginTop: -5,
   },
   list: {
     paddingHorizontal: 18,
-    paddingBottom: 120,
+    paddingBottom: 110,
     gap: 8,
   },
   footnote: {
     marginTop: 6,
     paddingHorizontal: 8,
-    fontSize: 12.5,
     lineHeight: 19,
-    fontWeight: "400",
-    color: SinoBrand.textTertiary,
   },
-  emptyContainer: {
+  empty: {
     flex: 1,
-    justifyContent: "center",
     alignItems: "center",
+    justifyContent: "center",
+    gap: 18,
     paddingHorizontal: 42,
-    gap: 8,
+    paddingBottom: 40,
   },
-  emptyTitle: {
-    fontSize: 19,
-    lineHeight: 24,
-    fontWeight: "600",
-    color: SinoBrand.ink,
+  emptyText: {
+    gap: 8,
   },
   emptyMessage: {
     fontSize: 14.5,
     lineHeight: 22,
-    fontWeight: "400",
+  },
+  centered: {
     textAlign: "center",
-    color: SinoBrand.textSecondary,
   },
-  emptyButton: {
-    width: "auto",
-    height: 46,
-    marginTop: 10,
-    paddingHorizontal: 18,
-  },
-  fabButton: {
+  fab: {
     position: "absolute",
     right: 22,
-    bottom: 24,
+    bottom: 22,
     width: 58,
     height: 58,
-    borderRadius: 17,
+    borderRadius: SinoRadius.fab,
     backgroundColor: SinoBrand.primary,
-    justifyContent: "center",
     alignItems: "center",
+    justifyContent: "center",
+  },
+  fabPressed: {
+    backgroundColor: SinoBrand.primaryPressed,
   },
 });

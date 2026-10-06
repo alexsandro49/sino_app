@@ -1,75 +1,41 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
-
-import '@/global.css';
-
-import { Platform } from 'react-native';
-
-export const Colors = {
-  light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
-  },
-  dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
-  },
-} as const;
-
-export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
-
-// Paleta própria da marca Sino (do design system, não do tema claro/escuro genérico acima).
-// Usada em telas de auth/onboarding que devem ficar visualmente consistentes com a marca
-// independente do tema do sistema.
 export const SinoBrand = {
   primary: '#2563E8',
+  primaryPressed: '#1B4CB8',
   primarySoft: '#E3EAFB',
+  primaryTint: '#F2F5FD',
   ink: '#232A38',
-  border: '#B9C2D2',
-  cardBorder: '#E7EAF1',
-  divider: '#E5E8EF',
   textSecondary: '#626C7E',
   textTertiary: '#939BAA',
+  placeholder: '#A6AEBC',
   background: '#F8F9FC',
+  white: '#FFFFFF',
   neutralSoft: '#F1F3F8',
+  neutralMuted: '#EFF1F6',
+  border: '#DFE3EB',
+  cardBorder: '#E7EAF1',
+  divider: '#E5E8EF',
+  skeleton: '#ECEFF4',
+  mutedMark: '#D3D9E3',
+  mutedMarkOutline: '#B9C2D2',
   up: '#0F6244',
   upIcon: '#157A57',
   upSoft: '#E7F1EC',
   down: '#A33C31',
   downSoft: '#FAEBE8',
-  white: '#FFFFFF',
+  destructiveBorder: '#EDD3CE',
+  backdrop: 'rgba(35, 42, 56, 0.38)',
 } as const;
 
-export const Fonts = Platform.select({
-  ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
-  },
-  default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
-  },
-  web: {
-    sans: 'var(--font-display)',
-    serif: 'var(--font-serif)',
-    rounded: 'var(--font-rounded)',
-    mono: 'var(--font-mono)',
-  },
-});
+export const SinoFonts = {
+  regular: 'PlusJakartaSans_400Regular',
+  medium: 'PlusJakartaSans_500Medium',
+  semibold: 'PlusJakartaSans_600SemiBold',
+} as const;
 
+export const SinoRadius = {
+  icon: 10,
+  control: 12,
+  card: 14,
+  sheet: 22,
+  fab: 17,
+} as const;

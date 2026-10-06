@@ -1,12 +1,31 @@
+import {
+  PlusJakartaSans_400Regular,
+  PlusJakartaSans_500Medium,
+  PlusJakartaSans_600SemiBold,
+  useFonts,
+} from "@expo-google-fonts/plus-jakarta-sans";
 import { DefaultTheme, Stack, ThemeProvider, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 
-import { AnimatedSplashOverlay } from "@/components/animated-icon";
+import { SinoBrand } from "@/constants/theme";
 import { AuthProvider, useAuth } from "@/contexts/auth-context";
 import { WatchlistProvider } from "@/contexts/watchlist-context";
 
 SplashScreen.preventAutoHideAsync();
+
+const navigationTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    primary: SinoBrand.primary,
+    background: SinoBrand.background,
+    card: SinoBrand.background,
+    text: SinoBrand.ink,
+    border: SinoBrand.divider,
+  },
+};
 
 function AuthRouter() {
   const router = useRouter();
@@ -14,6 +33,9 @@ function AuthRouter() {
 
   useEffect(() => {
     if (loading) return;
+
+    SplashScreen.hideAsync();
+
     if (!user) {
       router.replace("/signIn");
       return;
@@ -25,14 +47,36 @@ function AuthRouter() {
 }
 
 export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts({
+    PlusJakartaSans_400Regular,
+    PlusJakartaSans_500Medium,
+    PlusJakartaSans_600SemiBold,
+  });
+
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
+
   return (
     <AuthProvider>
       <WatchlistProvider>
-        <ThemeProvider value={DefaultTheme}>
-          <AnimatedSplashOverlay />
+        <ThemeProvider value={navigationTheme}>
+          <StatusBar style="dark" />
           <AuthRouter />
-          <Stack screenOptions={{ headerShown: false }} initialRouteName="signIn">
-            <Stack.Screen name="addTicker" options={{ presentation: "modal" }} />
+          <Stack
+            screenOptions={{ headerShown: false, contentStyle: { backgroundColor: SinoBrand.background } }}
+            initialRouteName="signIn"
+          >
+            <Stack.Screen
+              name="addTicker"
+              options={{
+                presentation: "formSheet",
+                sheetAllowedDetents: [0.92],
+                sheetGrabberVisible: true,
+                sheetCornerRadius: 22,
+                contentStyle: { backgroundColor: SinoBrand.white },
+              }}
+            />
           </Stack>
         </ThemeProvider>
       </WatchlistProvider>

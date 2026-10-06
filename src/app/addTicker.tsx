@@ -1,21 +1,14 @@
+import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { Check, Plus, Search, X } from "lucide-react-native";
 import { useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  View,
-} from "react-native";
+import { ActivityIndicator, Alert, FlatList, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { ThemedText } from "@/components/themed-text";
 import { Button } from "@/components/ui/button";
-import { SinoBrand } from "@/constants/theme";
+import { Text } from "@/components/ui/text";
+import { TextField } from "@/components/ui/text-field";
+import { SinoBrand, SinoFonts, SinoRadius } from "@/constants/theme";
 import { useWatchlist } from "@/contexts/watchlist-context";
 import { useTickerSearch } from "@/hooks/use-ticker-search";
 import type { Ticker } from "@/services/market";
@@ -33,6 +26,7 @@ export default function AddTicker() {
   }
 
   function toggle(ticker: Ticker) {
+    Haptics.selectionAsync();
     setSelected((current) =>
       current.some((item) => item.symbol === ticker.symbol)
         ? current.filter((item) => item.symbol !== ticker.symbol)
@@ -52,12 +46,10 @@ export default function AddTicker() {
     setSaving(true);
     try {
       await follow(selected);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.back();
     } catch (err) {
-      Alert.alert(
-        "Não deu pra adicionar",
-        err instanceof Error ? err.message : "Tente novamente.",
-      );
+      Alert.alert("Não deu pra adicionar", err instanceof Error ? err.message : "Tente de novo.");
     } finally {
       setSaving(false);
     }
@@ -69,61 +61,78 @@ export default function AddTicker() {
 
     return (
       <Pressable
-        style={[styles.item, checked && styles.itemSelected, following && styles.itemDisabled]}
         disabled={following}
         onPress={() => toggle(item)}
         accessibilityRole="checkbox"
         accessibilityState={{ checked, disabled: following }}
+        accessibilityLabel={`${item.symbol}, ${item.name}`}
+        style={({ pressed }) => [
+          styles.item,
+          (checked || pressed) && styles.itemHighlighted,
+          following && styles.itemDisabled,
+        ]}
       >
-        <View style={[styles.avatar, checked && styles.avatarSelected]}>
-          <ThemedText style={[styles.avatarText, checked && styles.avatarTextSelected]}>
+        <View style={[styles.monogram, checked && styles.monogramChecked]}>
+          <Text variant="overline" tone={checked ? "primary" : "secondary"} style={styles.monogramText}>
             {item.symbol.slice(0, 2)}
-          </ThemedText>
+          </Text>
         </View>
         <View style={styles.itemInfo}>
-          <ThemedText style={styles.itemSymbol}>{item.symbol}</ThemedText>
-          <ThemedText style={styles.itemName} numberOfLines={1}>
+          <Text variant="ticker" style={styles.itemSymbol}>
+            {item.symbol}
+          </Text>
+          <Text variant="caption" tone="secondary" numberOfLines={1}>
             {item.name}
-          </ThemedText>
+          </Text>
         </View>
         {following ? (
-          <ThemedText style={styles.followingText}>já segue</ThemedText>
+          <Text variant="caption" tone="secondary">
+            já segue
+          </Text>
         ) : checked ? (
           <View style={styles.checkCircle}>
             <Check size={14} strokeWidth={2.2} color={SinoBrand.white} />
           </View>
         ) : (
-          <Plus size={18} strokeWidth={1.9} color={SinoBrand.textTertiary} />
+          <Plus size={18} strokeWidth={1.9} color={SinoBrand.placeholder} />
         )}
       </Pressable>
     );
   }
 
+  const trimmedQuery = query.trim();
+
   return (
     <SafeAreaView edges={["bottom"]} style={styles.container}>
       <View style={styles.header}>
-        <ThemedText style={styles.title}>Adicionar ticket</ThemedText>
-        <Pressable style={styles.closeButton} onPress={() => router.back()} accessibilityLabel="Fechar">
+        <Text variant="section">Adicionar ticket</Text>
+        <Pressable
+          onPress={() => router.back()}
+          accessibilityLabel="Fechar"
+          accessibilityRole="button"
+          hitSlop={8}
+          style={({ pressed }) => [styles.closeButton, pressed && styles.closeButtonPressed]}
+        >
           <X size={15} strokeWidth={1.9} color={SinoBrand.textSecondary} />
         </Pressable>
       </View>
 
-      <View style={styles.searchField}>
-        <Search size={18} strokeWidth={1.8} color={SinoBrand.primary} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Busque por código ou empresa"
-          placeholderTextColor={SinoBrand.textTertiary}
+      <View style={styles.searchArea}>
+        <TextField
+          leading={<Search size={18} strokeWidth={1.8} color={SinoBrand.primary} />}
+          trailing={loading ? <ActivityIndicator size="small" color={SinoBrand.textTertiary} /> : null}
+          placeholder="Código ou nome da empresa"
           autoCapitalize="characters"
           autoCorrect={false}
           autoFocus
+          returnKeyType="search"
           value={query}
           onChangeText={setQuery}
+          style={styles.searchInput}
         />
-        {loading && <ActivityIndicator size="small" color={SinoBrand.primary} />}
       </View>
 
-      {selected.length > 0 && (
+      {selected.length > 0 ? (
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -134,40 +143,50 @@ export default function AddTicker() {
           {selected.map((ticker) => (
             <Pressable
               key={ticker.symbol}
-              style={styles.chip}
               onPress={() => toggle(ticker)}
-              accessibilityLabel={`Remover ${ticker.symbol} da seleção`}
+              accessibilityRole="button"
+              accessibilityLabel={`Tirar ${ticker.symbol} da seleção`}
+              style={({ pressed }) => [styles.chip, pressed && styles.chipPressed]}
             >
-              <ThemedText style={styles.chipText}>{ticker.symbol}</ThemedText>
-              <X size={13} strokeWidth={2} color={SinoBrand.primary} />
+              <Text variant="label" tone="primary" style={styles.chipText}>
+                {ticker.symbol}
+              </Text>
+              <X size={13} strokeWidth={2.2} color={SinoBrand.primary} />
             </Pressable>
           ))}
         </ScrollView>
-      )}
+      ) : null}
 
       <FlatList
         data={results}
         keyExtractor={(ticker) => ticker.symbol}
         renderItem={renderItem}
+        extraData={selected}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         contentContainerStyle={styles.list}
         ListHeaderComponent={
-          results.length > 0 ? <ThemedText style={styles.sectionLabel}>Disponíveis na B3</ThemedText> : null
+          results.length > 0 ? (
+            <Text variant="overline" tone="tertiary" style={styles.sectionLabel}>
+              Disponíveis na B3
+            </Text>
+          ) : null
         }
         ListEmptyComponent={
-          query.trim() && !loading ? (
-            <ThemedText style={styles.emptyText}>{error ?? "Nenhum ticker encontrado."}</ThemedText>
-          ) : null
+          loading ? null : trimmedQuery ? (
+            <Text variant="body" tone={error ? "down" : "secondary"} style={styles.emptyText}>
+              {error ?? `Nada encontrado pra "${trimmedQuery}".`}
+            </Text>
+          ) : (
+            <Text variant="body" tone="tertiary" style={styles.emptyText}>
+              Busque por PETR4, VALE3, MXRF11…
+            </Text>
+          )
         }
       />
 
       <View style={styles.footer}>
-        <Button
-          label={addLabel}
-          disabled={selected.length === 0}
-          loading={saving}
-          onPress={handleAdd}
-        />
+        <Button label={addLabel} disabled={selected.length === 0} loading={saving} onPress={handleAdd} />
       </View>
     </SafeAreaView>
   );
@@ -177,7 +196,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: SinoBrand.white,
-    paddingTop: 20,
+    paddingTop: 22,
   },
   header: {
     flexDirection: "row",
@@ -185,13 +204,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 20,
     marginBottom: 17,
-  },
-  title: {
-    fontSize: 18,
-    lineHeight: 24,
-    fontWeight: "600",
-    letterSpacing: -0.36,
-    color: SinoBrand.ink,
   },
   closeButton: {
     width: 30,
@@ -201,22 +213,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  searchField: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    height: 52,
-    marginHorizontal: 20,
-    paddingHorizontal: 15,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: SinoBrand.primary,
+  closeButtonPressed: {
+    backgroundColor: SinoBrand.border,
+  },
+  searchArea: {
+    paddingHorizontal: 20,
   },
   searchInput: {
-    flex: 1,
+    fontFamily: SinoFonts.semibold,
     fontSize: 16,
-    fontWeight: "600",
-    color: SinoBrand.ink,
   },
   chipsScroll: {
     flexGrow: 0,
@@ -231,15 +236,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 6,
     height: 32,
-    paddingHorizontal: 12,
+    paddingLeft: 12,
+    paddingRight: 10,
     borderRadius: 8,
     backgroundColor: SinoBrand.primarySoft,
   },
+  chipPressed: {
+    opacity: 0.7,
+  },
   chipText: {
-    fontSize: 13.5,
-    lineHeight: 18,
-    fontWeight: "600",
-    color: SinoBrand.primary,
+    fontFamily: SinoFonts.semibold,
   },
   list: {
     paddingHorizontal: 20,
@@ -248,10 +254,6 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   sectionLabel: {
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: "500",
-    color: SinoBrand.textTertiary,
     paddingHorizontal: 4,
     paddingBottom: 8,
   },
@@ -260,33 +262,27 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 12,
     padding: 11,
-    borderRadius: 12,
+    borderRadius: SinoRadius.control,
   },
-  itemSelected: {
-    backgroundColor: "#F2F5FD",
+  itemHighlighted: {
+    backgroundColor: SinoBrand.primaryTint,
   },
   itemDisabled: {
     opacity: 0.5,
   },
-  avatar: {
+  monogram: {
     width: 36,
     height: 36,
-    borderRadius: 10,
+    borderRadius: SinoRadius.icon,
     backgroundColor: SinoBrand.neutralSoft,
     alignItems: "center",
     justifyContent: "center",
   },
-  avatarSelected: {
+  monogramChecked: {
     backgroundColor: SinoBrand.primarySoft,
   },
-  avatarText: {
-    fontSize: 13,
-    lineHeight: 16,
-    fontWeight: "600",
-    color: SinoBrand.textSecondary,
-  },
-  avatarTextSelected: {
-    color: SinoBrand.primary,
+  monogramText: {
+    fontFamily: SinoFonts.semibold,
   },
   itemInfo: {
     flex: 1,
@@ -295,19 +291,6 @@ const styles = StyleSheet.create({
   itemSymbol: {
     fontSize: 15,
     lineHeight: 19,
-    fontWeight: "600",
-    color: SinoBrand.ink,
-  },
-  itemName: {
-    fontSize: 12.5,
-    lineHeight: 16,
-    fontWeight: "400",
-    color: SinoBrand.textSecondary,
-  },
-  followingText: {
-    fontSize: 12.5,
-    fontWeight: "400",
-    color: SinoBrand.textSecondary,
   },
   checkCircle: {
     width: 24,
@@ -318,11 +301,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   emptyText: {
-    paddingTop: 24,
+    paddingTop: 28,
+    paddingHorizontal: 12,
     textAlign: "center",
-    fontSize: 14,
-    fontWeight: "400",
-    color: SinoBrand.textSecondary,
   },
   footer: {
     paddingHorizontal: 20,

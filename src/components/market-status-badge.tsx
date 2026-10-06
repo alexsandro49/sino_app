@@ -1,15 +1,15 @@
 import { StyleSheet, View } from "react-native";
 
-import { ThemedText } from "@/components/themed-text";
-import { SinoBrand } from "@/constants/theme";
+import { Text } from "@/components/ui/text";
+import { SinoBrand, SinoFonts } from "@/constants/theme";
 
 export function MarketStatusBadge({ open }: { open: boolean }) {
   return (
     <View style={[styles.badge, { backgroundColor: open ? SinoBrand.upSoft : SinoBrand.neutralSoft }]}>
       <View style={[styles.dot, { backgroundColor: open ? SinoBrand.upIcon : SinoBrand.textTertiary }]} />
-      <ThemedText style={[styles.label, { color: open ? SinoBrand.up : SinoBrand.textSecondary }]}>
-        {open ? "Pregão aberto · parcial" : "Pregão fechado · final do dia"}
-      </ThemedText>
+      <Text variant="caption" tone={open ? "up" : "secondary"} style={styles.label}>
+        {open ? "Pregão aberto · parcial" : "Pregão fechado · números do dia"}
+      </Text>
     </View>
   );
 }
@@ -31,8 +31,6 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   label: {
-    fontSize: 12.5,
-    lineHeight: 16,
-    fontWeight: "600",
+    fontFamily: SinoFonts.semibold,
   },
 });

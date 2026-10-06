@@ -1,24 +1,15 @@
 import { useState } from "react";
-import { UserRound } from "lucide-react-native";
-import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  View,
-} from "react-native";
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { ThemedText } from "@/components/themed-text";
 import { Button } from "@/components/ui/button";
+import { Text } from "@/components/ui/text";
 import { TextField } from "@/components/ui/text-field";
+import { SinoBrand } from "@/constants/theme";
 import { useAuth } from "@/contexts/auth-context";
-import { useTheme } from "@/hooks/use-theme";
 
 export default function CollectName() {
-  const theme = useTheme();
-  const { updateDisplayName } = useAuth();
+  const { updateDisplayName, signOut } = useAuth();
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -26,62 +17,60 @@ export default function CollectName() {
     const trimmedName = name.trim();
 
     if (!trimmedName) {
-      Alert.alert("Nome obrigatório", "Digite seu nome para continuar.");
+      Alert.alert("Falta o seu nome", "Digite como você quer ser chamado pra continuar.");
       return;
     }
 
     setLoading(true);
     try {
       const { error } = await updateDisplayName(trimmedName);
-
       if (error) {
-        Alert.alert("Erro ao salvar", error);
+        Alert.alert("Não deu pra salvar", error);
       }
-    } catch (err) {
-      Alert.alert(
-        "Erro inesperado",
-        err instanceof Error ? err.message : "Não foi possível salvar o nome.",
-      );
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+    <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardView}
       >
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
           bounces={false}
         >
-          <View style={styles.cardContainer}>
-            <View style={styles.centerSection}>
-              <UserRound size={64} strokeWidth={2} color={theme.text} />
-              <ThemedText style={styles.titleText}>Como podemos te chamar?</ThemedText>
-              <ThemedText style={[styles.subtitleText, { color: theme.textSecondary }]}>
-                Só usamos isso pra personalizar sua experiência no Sino.
-              </ThemedText>
-            </View>
+          <View style={styles.intro}>
+            <Text variant="hero">Como podemos te chamar?</Text>
+            <Text variant="body" tone="secondary">
+              Usamos só pra te cumprimentar no app.
+            </Text>
+          </View>
 
-            <View style={styles.bottomSection}>
-              <TextField
-                placeholder="Seu nome"
-                autoCapitalize="words"
-                autoCorrect={false}
-                value={name}
-                onChangeText={setName}
-                editable={!loading}
-                onSubmitEditing={handleSave}
-                returnKeyType="done"
-              />
+          <View style={styles.field}>
+            <Text variant="label" tone="secondary">
+              Nome
+            </Text>
+            <TextField
+              placeholder="Seu nome"
+              autoCapitalize="words"
+              autoCorrect={false}
+              autoFocus
+              value={name}
+              onChangeText={setName}
+              editable={!loading}
+              onSubmitEditing={handleSave}
+              returnKeyType="done"
+            />
+          </View>
 
-              <Button label="Continuar" onPress={handleSave} loading={loading} />
-            </View>
+          <View style={styles.actions}>
+            <Button label="Continuar" onPress={handleSave} loading={loading} />
+            <Button variant="ghost" size="compact" label="Usar outra conta" onPress={signOut} />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -92,44 +81,26 @@ export default function CollectName() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: SinoBrand.background,
   },
   keyboardView: {
     flex: 1,
   },
-  scrollContent: {
+  content: {
     flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingBottom: 24,
+    paddingHorizontal: 26,
+    paddingTop: 48,
+    paddingBottom: 16,
+    gap: 24,
   },
-  cardContainer: {
-    flex: 1,
-    width: "100%",
-    maxWidth: 380,
-    alignSelf: "center",
-    justifyContent: "space-between",
+  intro: {
+    gap: 8,
   },
-  centerSection: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    minHeight: 180,
-    paddingVertical: 32,
-    gap: 12,
+  field: {
+    gap: 7,
   },
-  titleText: {
-    fontSize: 22,
-    fontWeight: "700",
-    textAlign: "center",
-    letterSpacing: 0.3,
-  },
-  subtitleText: {
-    fontSize: 14,
-    textAlign: "center",
-    lineHeight: 20,
-  },
-  bottomSection: {
-    width: "100%",
-    gap: 14,
-    paddingBottom: 8,
+  actions: {
+    marginTop: "auto",
+    gap: 6,
   },
 });
