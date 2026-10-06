@@ -5,6 +5,7 @@ const FRACTIONAL_SYMBOL = /^[A-Z]{4}\d{1,2}F$/;
 export type TickerSummary = {
   symbol: string;
   name: string;
+  logoUrl: string | null;
 };
 
 export type Quote = {
@@ -30,6 +31,7 @@ type BrapiTickersResponse = {
     name?: string;
     longName?: string;
     isActive?: boolean;
+    logoUrl?: string;
   }[];
 };
 
@@ -78,6 +80,7 @@ export async function searchTickers(query: string, limit: number): Promise<Ticke
     .map((ticker) => ({
       symbol: ticker.symbol,
       name: ticker.longName ?? ticker.name ?? ticker.symbol,
+      logoUrl: ticker.logoUrl ?? null,
     }));
 }
 

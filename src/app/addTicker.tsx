@@ -5,6 +5,7 @@ import { useState } from "react";
 import { ActivityIndicator, Alert, FlatList, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { TickerLogo } from "@/components/ticker-logo";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { TextField } from "@/components/ui/text-field";
@@ -72,11 +73,7 @@ export default function AddTicker() {
           following && styles.itemDisabled,
         ]}
       >
-        <View style={[styles.monogram, checked && styles.monogramChecked]}>
-          <Text variant="overline" tone={checked ? "primary" : "secondary"} style={styles.monogramText}>
-            {item.symbol.slice(0, 2)}
-          </Text>
-        </View>
+        <TickerLogo symbol={item.symbol} logoUrl={item.logoUrl} size={36} />
         <View style={styles.itemInfo}>
           <Text variant="ticker" style={styles.itemSymbol}>
             {item.symbol}
@@ -269,20 +266,6 @@ const styles = StyleSheet.create({
   },
   itemDisabled: {
     opacity: 0.5,
-  },
-  monogram: {
-    width: 36,
-    height: 36,
-    borderRadius: SinoRadius.icon,
-    backgroundColor: SinoBrand.neutralSoft,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  monogramChecked: {
-    backgroundColor: SinoBrand.primarySoft,
-  },
-  monogramText: {
-    fontFamily: SinoFonts.semibold,
   },
   itemInfo: {
     flex: 1,

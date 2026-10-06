@@ -1,46 +1,18 @@
-import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { ExternalLink, X } from "lucide-react-native";
-import { useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { TickerLogo } from "@/components/ticker-logo";
+import { ChangePill } from "@/components/ticker-row";
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { SinoBrand, SinoFonts, SinoRadius } from "@/constants/theme";
 import { useWatchlist } from "@/contexts/watchlist-context";
 import { useQuotes } from "@/hooks/use-quotes";
 import { googleFinanceUrl, type Quote } from "@/services/market";
-import { formatChange, formatCompact, formatPrice, formatUpdatedAt, trendOf } from "@/utils/format";
-
-const changeColors = {
-  up: { text: "up", background: SinoBrand.upSoft },
-  down: { text: "down", background: SinoBrand.downSoft },
-  flat: { text: "secondary", background: SinoBrand.neutralSoft },
-} as const;
-
-function TickerLogo({ symbol, logoUrl }: { symbol: string; logoUrl: string | null }) {
-  const [failed, setFailed] = useState(false);
-
-  return (
-    <View style={styles.logo}>
-      {logoUrl && !failed ? (
-        <Image
-          source={{ uri: logoUrl }}
-          style={styles.logoImage}
-          contentFit="contain"
-          onError={() => setFailed(true)}
-          accessibilityIgnoresInvertColors
-        />
-      ) : (
-        <Text variant="overline" tone="primary" style={styles.logoMonogram}>
-          {symbol.slice(0, 2)}
-        </Text>
-      )}
-    </View>
-  );
-}
+import { formatCompact, formatPrice, formatUpdatedAt } from "@/utils/format";
 
 function DayRange({ quote }: { quote: Quote }) {
   if (quote.dayLow === null || quote.dayHigh === null || quote.dayHigh <= quote.dayLow) {
@@ -107,7 +79,6 @@ export default function TickerDetail() {
 
   const quote = quotes[symbol];
   const name = quote?.name ?? tickers.find((ticker) => ticker.symbol === symbol)?.name ?? "";
-  const trend = quote ? trendOf(quote.changePercent) : "flat";
 
   function openGoogleFinance() {
     WebBrowser.openBrowserAsync(googleFinanceUrl(symbol), {
@@ -133,7 +104,11 @@ export default function TickerDetail() {
   return (
     <SafeAreaView edges={["bottom"]} style={styles.container}>
       <View style={styles.header}>
-        <TickerLogo symbol={symbol} logoUrl={quote?.logoUrl ?? null} />
+        <TickerLogo
+          symbol={symbol}
+          logoUrl={quote?.logoUrl ?? tickers.find((ticker) => ticker.symbol === symbol)?.logoUrl}
+          size={46}
+        />
         <View style={styles.identity}>
           <Text variant="title">{symbol}</Text>
           {name ? (
@@ -161,11 +136,7 @@ export default function TickerDetail() {
                 {formatPrice(quote.price)}
               </Text>
               <View style={styles.changeRow}>
-                <View style={[styles.changePill, { backgroundColor: changeColors[trend].background }]}>
-                  <Text variant="label" tone={changeColors[trend].text} style={styles.changeText}>
-                    {formatChange(quote.changePercent)}
-                  </Text>
-                </View>
+                <ChangePill changePercent={quote.changePercent} />
                 <Text variant="caption" tone="tertiary">
                   no dia
                 </Text>
@@ -235,24 +206,6 @@ const styles = StyleSheet.create({
     gap: 13,
     paddingHorizontal: 20,
   },
-  logo: {
-    width: 46,
-    height: 46,
-    borderRadius: SinoRadius.control,
-    borderWidth: 1,
-    borderColor: SinoBrand.cardBorder,
-    backgroundColor: SinoBrand.white,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-  },
-  logoImage: {
-    width: 30,
-    height: 30,
-  },
-  logoMonogram: {
-    fontFamily: SinoFonts.semibold,
-  },
   identity: {
     flex: 1,
     gap: 1,
@@ -287,14 +240,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-  },
-  changePill: {
-    paddingVertical: 3,
-    paddingHorizontal: 9,
-    borderRadius: 6,
-  },
-  changeText: {
-    fontFamily: SinoFonts.semibold,
   },
   section: {
     gap: 10,

@@ -20,6 +20,7 @@ const MAX_QUERY_LENGTH = 30;
 const MAX_NAME_LENGTH = 120;
 const SEARCH_LIMIT = 15;
 const WATCHLIST_ITEM_PATH = /^\/watchlist\/([A-Za-z0-9]+)$/;
+const LOGO_URL_PATTERN = /^https:\/\/icons\.brapi\.dev\/icons\/[A-Za-z0-9]+\.svg$/;
 
 async function authenticatedUserId(req: Request): Promise<string | null> {
   const header = req.get("Authorization") ?? "";
@@ -65,7 +66,9 @@ function parseWatchlistItems(raw: unknown): WatchlistItem[] | null {
       return null;
     }
 
-    items.push({ symbol, name: name || symbol });
+    const logoUrl = typeof entry?.logoUrl === "string" && LOGO_URL_PATTERN.test(entry.logoUrl) ? entry.logoUrl : null;
+
+    items.push({ symbol, name: name || symbol, logoUrl });
   }
 
   return items;

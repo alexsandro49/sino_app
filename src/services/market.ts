@@ -3,6 +3,7 @@ import { apiGet } from "@/services/api";
 export type Ticker = {
   symbol: string;
   name: string;
+  logoUrl?: string | null;
 };
 
 export type Quote = {
