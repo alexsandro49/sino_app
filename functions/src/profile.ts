@@ -42,3 +42,8 @@ export async function removePushTokens(userId: string, tokens: string[]): Promis
   if (tokens.length === 0) return;
   await userDoc(userId).set({ pushTokens: FieldValue.arrayRemove(...tokens) }, { merge: true });
 }
+
+export async function listProfileUserIds(): Promise<string[]> {
+  const snapshot = await getFirestore().collection("users").select().get();
+  return snapshot.docs.map((doc) => doc.id);
+}
