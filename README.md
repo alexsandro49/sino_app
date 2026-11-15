@@ -58,7 +58,7 @@ Setup:
 
 Google sign-in opens `firebase-hosting/google-sign-in.html` (served from the project's auth domain) in a browser session, which returns a Google ID token to the app. This works in Expo Go without native modules.
 
-The backend is three independent Cloud Functions, one per domain, each deployable on its own (`npx firebase-tools deploy --only functions:market`). `EXPO_PUBLIC_API_URL` is the functions base URL (`https://southamerica-east1-<project-id>.cloudfunctions.net`) and the first path segment selects the function.
+The HTTP backend is three independent Cloud Functions, one per domain, each deployable on its own (`npx firebase-tools deploy --only functions:market`). `EXPO_PUBLIC_API_URL` is the functions base URL (`https://southamerica-east1-<project-id>.cloudfunctions.net`) and the first path segment selects the function.
 
 Market data goes through the `MarketDataProvider` contract in `functions/src/market/provider.ts`. brapi.dev is one implementation (`brapi-provider.ts`); switching to another source means adding an implementation and returning it from `marketData()` in `functions/src/market/index.ts`, with no change to the routes or to the app.
 
@@ -72,7 +72,9 @@ API routes (all require `Authorization: Bearer <Firebase ID token>`):
 - `GET /me/preferences` → `{ notificationMode }` (`per_ticker`, `summary` or `none`)
 - `PUT /me/preferences` with `{ notificationMode }` → `{ notificationMode }`
 - `POST /me/push-tokens` / `DELETE /me/push-tokens` with `{ token }` (Expo push token) → `204`
-- `POST /me/summary` → sends the end-of-day summary to the current user right away (demo trigger until the daily schedule exists)
+- `POST /me/summary` → sends the end-of-day summary to the current user right away (demo trigger)
+
+The scheduled function `dailySummary` sends the same summary to every user with notifications on, at 18:15 (America/Sao_Paulo) on weekdays. It does not skip market holidays.
 
 ### Known issue: Google/GitHub login doesn't work in Expo Go on Android
 
