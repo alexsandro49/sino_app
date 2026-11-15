@@ -1,4 +1,4 @@
-import { getQuotes, type Quote } from "./brapi.js";
+import type { MarketDataProvider, Quote } from "./market/index.js";
 import { getProfile, removePushTokens, type NotificationMode } from "./profile.js";
 import { listWatchlist } from "./watchlist.js";
 
@@ -104,7 +104,7 @@ async function sendPushMessages(messages: PushMessage[]): Promise<{ sent: number
   return { sent, invalidTokens: [...invalidTokens] };
 }
 
-export async function sendSummaryToUser(userId: string, brapiToken: string): Promise<SummaryResult> {
+export async function sendSummaryToUser(userId: string, marketData: MarketDataProvider): Promise<SummaryResult> {
   const profile = await getProfile(userId);
 
   if (profile.notificationMode === "none") {
@@ -121,10 +121,7 @@ export async function sendSummaryToUser(userId: string, brapiToken: string): Pro
     return { status: "skipped", reason: "empty_watchlist" };
   }
 
-  const { quotes } = await getQuotes(
-    watchlist.map((item) => item.symbol),
-    brapiToken,
-  );
+  const { quotes } = await marketData.getQuotes(watchlist.map((item) => item.symbol));
 
   if (quotes.length === 0) {
     return { status: "skipped", reason: "no_quotes" };

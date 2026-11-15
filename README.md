@@ -40,7 +40,7 @@ This command will move the starter code to the **app-example** directory and cre
 The app talks to Firebase Auth for sign-in and to its own HTTP API (`functions/`, Cloud Functions) for market data. The app never calls brapi.dev directly, so the data source can change without republishing the app.
 
 ```
-screens → hooks (src/hooks, src/contexts) → services (src/services) → Cloud Function `api` → brapi.dev
+screens → hooks (src/hooks, src/contexts) → services (src/services) → Cloud Functions (`market`, `watchlist`, `me`) → MarketDataProvider → brapi.dev
 ```
 
 Setup:
@@ -58,10 +58,14 @@ Setup:
 
 Google sign-in opens `firebase-hosting/google-sign-in.html` (served from the project's auth domain) in a browser session, which returns a Google ID token to the app. This works in Expo Go without native modules.
 
+The backend is three independent Cloud Functions, one per domain, each deployable on its own (`npx firebase-tools deploy --only functions:market`). `EXPO_PUBLIC_API_URL` is the functions base URL (`https://southamerica-east1-<project-id>.cloudfunctions.net`) and the first path segment selects the function.
+
+Market data goes through the `MarketDataProvider` contract in `functions/src/market/provider.ts`. brapi.dev is one implementation (`brapi-provider.ts`); switching to another source means adding an implementation and returning it from `marketData()` in `functions/src/market/index.ts`, with no change to the routes or to the app.
+
 API routes (all require `Authorization: Bearer <Firebase ID token>`):
 
-- `GET /tickers?q=PET` → `{ tickers: [{ symbol, name, logoUrl }] }`
-- `GET /quotes?symbols=PETR4,VALE3` → `{ quotes: [{ symbol, name, logoUrl, price, changePercent, previousClose, open, dayLow, dayHigh, volume, marketCap, fiftyTwoWeekLow, fiftyTwoWeekHigh, updatedAt }], failed: [] }`
+- `GET /market/tickers?q=PET` → `{ tickers: [{ symbol, name, logoUrl }] }`
+- `GET /market/quotes?symbols=PETR4,VALE3` → `{ quotes: [{ symbol, name, logoUrl, price, changePercent, previousClose, open, dayLow, dayHigh, volume, marketCap, fiftyTwoWeekLow, fiftyTwoWeekHigh, updatedAt }], failed: [] }`
 - `GET /watchlist` → `{ tickers: [{ symbol, name, logoUrl }] }`
 - `POST /watchlist` with `{ tickers: [{ symbol, name, logoUrl }] }` → `{ tickers }` (only `icons.brapi.dev` logo URLs are stored)
 - `DELETE /watchlist/:symbol` → `{ tickers }`

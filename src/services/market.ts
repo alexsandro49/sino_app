@@ -28,7 +28,7 @@ export function googleFinanceUrl(symbol: string): string {
 }
 
 export async function searchTickers(query: string): Promise<Ticker[]> {
-  const { tickers } = await apiGet<{ tickers: Ticker[] }>("/tickers", { q: query });
+  const { tickers } = await apiGet<{ tickers: Ticker[] }>("/market/tickers", { q: query });
   return tickers;
 }
 
@@ -37,7 +37,7 @@ export async function getQuotes(symbols: string[]): Promise<Quote[]> {
     return [];
   }
 
-  const { quotes } = await apiGet<{ quotes: Quote[] }>("/quotes", { symbols: symbols.join(",") });
+  const { quotes } = await apiGet<{ quotes: Quote[] }>("/market/quotes", { symbols: symbols.join(",") });
   return quotes;
 }
 
