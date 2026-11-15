@@ -1,29 +1,8 @@
+import type { MarketDataProvider, Quote, QuotesResult, TickerSummary } from "./provider.js";
+
 const BRAPI_URL = "https://brapi.dev/api/v2";
 const CACHE_TTL_MS = 5 * 60 * 1000;
 const FRACTIONAL_SYMBOL = /^[A-Z]{4}\d{1,2}F$/;
-
-export type TickerSummary = {
-  symbol: string;
-  name: string;
-  logoUrl: string | null;
-};
-
-export type Quote = {
-  symbol: string;
-  name: string;
-  logoUrl: string | null;
-  price: number;
-  changePercent: number;
-  previousClose: number | null;
-  open: number | null;
-  dayLow: number | null;
-  dayHigh: number | null;
-  volume: number | null;
-  marketCap: number | null;
-  fiftyTwoWeekLow: number | null;
-  fiftyTwoWeekHigh: number | null;
-  updatedAt: string;
-};
 
 type BrapiTickersResponse = {
   results?: {
@@ -71,7 +50,7 @@ async function brapiGet<T>(path: string, token?: string): Promise<T> {
   return (await response.json()) as T;
 }
 
-export async function searchTickers(query: string, limit: number): Promise<TickerSummary[]> {
+async function searchTickers(query: string, limit: number): Promise<TickerSummary[]> {
   const params = `search=${encodeURIComponent(query)}&limit=${limit}&sortBy=volume&sortOrder=desc`;
   const body = await brapiGet<BrapiTickersResponse>(`/tickers?${params}`);
 
@@ -121,10 +100,7 @@ async function fetchQuote(symbol: string, token: string): Promise<Quote> {
   return quote;
 }
 
-export async function getQuotes(
-  symbols: string[],
-  token: string,
-): Promise<{ quotes: Quote[]; failed: string[] }> {
+async function getQuotes(symbols: string[], token: string): Promise<QuotesResult> {
   const settled = await Promise.allSettled(symbols.map((symbol) => fetchQuote(symbol, token)));
 
   const quotes: Quote[] = [];
@@ -139,4 +115,11 @@ export async function getQuotes(
   });
 
   return { quotes, failed };
+}
+
+export function createBrapiProvider(token: string): MarketDataProvider {
+  return {
+    searchTickers,
+    getQuotes: (symbols) => getQuotes(symbols, token),
+  };
 }
