@@ -12,7 +12,13 @@ import { SinoFonts, SinoRadius } from "@/constants/theme";
 import { useAuth } from "@/contexts/auth-context";
 import { useWatchlist } from "@/contexts/watchlist-context";
 import { useNotificationSettings } from "@/hooks/use-notification-settings";
-import { sendSummaryNow, unregisterDevice, type NotificationMode, type SummaryResult } from "@/services/notifications";
+import {
+  sendSummaryNow,
+  unregisterDevice,
+  type NotificationMode,
+  type PushPermission,
+  type SummaryResult,
+} from "@/services/notifications";
 import { themedStyles, useColors } from "@/hooks/use-colors";
 
 const MODE_OPTIONS = [
@@ -43,6 +49,21 @@ const SKIPPED_MESSAGES: Record<Extract<SummaryResult, { status: "skipped" }>["re
   no_quotes: "Não conseguimos as cotações agora. Tente de novo em instantes.",
 };
 
+const TEST_BLOCKS: Record<Exclude<PushPermission, "granted">, { label: string; hint: string }> = {
+  denied: {
+    label: "Notificações bloqueadas",
+    hint: "Libere as notificações do Sino nas configurações do aparelho pra poder testar.",
+  },
+  undetermined: {
+    label: "Notificações não permitidas",
+    hint: "Permita as notificações neste aparelho, no aviso acima, pra poder testar.",
+  },
+  unsupported: {
+    label: "Indisponível neste aparelho",
+    hint: "O teste só funciona num celular de verdade.",
+  },
+};
+
 export default function User() {
   const colors = useColors();
   const styles = useStyles();
@@ -60,6 +81,8 @@ export default function User() {
         ? "1 ticker"
         : `${tickers.length} tickers`;
   const notificationsOn = mode !== null && mode !== "none";
+  const testBlock = notificationsOn && permission !== "granted" ? TEST_BLOCKS[permission] : null;
+  const TestIcon = testBlock ? BellOff : Send;
 
   function confirmSignOut() {
     Alert.alert("Sair da conta?", "Sua carteira fica salva e volta quando você entrar de novo.", [
@@ -75,27 +98,10 @@ export default function User() {
     ]);
   }
 
-  function alertBlocked() {
-    Alert.alert(
-      "Notificações bloqueadas",
-      "O Sino não tem permissão pra notificar neste aparelho, então o resumo não chegaria aqui.",
-      [
-        { text: "Agora não", style: "cancel" },
-        { text: "Abrir configurações", onPress: () => Linking.openSettings() },
-      ],
-    );
-  }
-
   async function handleSendNow() {
     setSending(true);
     try {
-      const current = await checkPermission();
-      const allowed = current === "undetermined" ? await enableOnDevice() : current;
-
-      if (allowed === "denied" || allowed === "undetermined") {
-        alertBlocked();
-        return;
-      }
+      if ((await checkPermission()) !== "granted") return;
 
       const result = await sendSummaryNow();
       if (result.status === "sent") {
@@ -209,14 +215,14 @@ export default function User() {
           </Text>
           <Button
             variant="secondary"
-            label="Enviar resumo agora"
-            icon={<Send size={16} strokeWidth={1.8} color={colors.ink} />}
+            label={testBlock?.label ?? "Enviar resumo agora"}
+            icon={<TestIcon size={16} strokeWidth={1.8} color={colors.ink} />}
             loading={sending}
-            disabled={!notificationsOn}
+            disabled={!notificationsOn || testBlock !== null}
             onPress={handleSendNow}
           />
           <Text variant="caption" tone="tertiary" style={styles.sectionLabel}>
-            Manda já o aviso que você recebe no fim do pregão, com as cotações de agora.
+            {testBlock?.hint ?? "Manda já o aviso que você recebe no fim do pregão, com as cotações de agora."}
           </Text>
         </View>
 
