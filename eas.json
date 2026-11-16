@@ -1,0 +1,20 @@
+{
+  "cli": {
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyAG64DZwleyO81QnqjoCL9L2CnkSZTzlcY",
+        "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "sinoapp-6f611.firebaseapp.com",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "sinoapp-6f611",
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:977992116171:web:76673b89cbec3a315cb84e",
+        "EXPO_PUBLIC_API_URL": "https://southamerica-east1-sinoapp-6f611.cloudfunctions.net"
+      }
+    }
+  }
+}

@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "sino_app",
+    "name": "Sino",
     "slug": "sino_app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -14,10 +14,11 @@
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.sino.app",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "output": "single",
@@ -44,7 +45,10 @@
           "icon": "./assets/images/notification-icon.png",
           "color": "#2563E8"
         }
-      ]
+      ],
+      "expo-font",
+      "expo-image",
+      "expo-status-bar"
     ],
     "experiments": {
       "typedRoutes": true,

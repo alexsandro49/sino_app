@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "977992116171",
+    "project_id": "sinoapp-6f611",
+    "storage_bucket": "sinoapp-6f611.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:977992116171:android:3bd7d45ba84f767a5cb84e",
+        "android_client_info": {
+          "package_name": "com.sino.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "977992116171-tt2jsg7q9ihv70uevoep6ue0pu8q3d85.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBqnKA2Min7IWzYxbUhEAeMZAk43rmdZA4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "977992116171-tt2jsg7q9ihv70uevoep6ue0pu8q3d85.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
