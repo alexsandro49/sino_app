@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+import { useFocusEffect } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
+import { AppState } from "react-native";
 
 import {
   getNotificationMode,
@@ -32,6 +34,22 @@ export function useNotificationSettings() {
       cancelled = true;
     };
   }, []);
+
+  const refreshPermission = useCallback(() => {
+    getPushPermission()
+      .then(setPermission)
+      .catch(() => null);
+  }, []);
+
+  useFocusEffect(refreshPermission);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") refreshPermission();
+    });
+
+    return () => subscription.remove();
+  }, [refreshPermission]);
 
   async function changeMode(nextMode: NotificationMode) {
     if (nextMode === mode) return;
