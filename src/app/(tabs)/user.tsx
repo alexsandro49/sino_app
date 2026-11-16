@@ -38,7 +38,7 @@ const MODE_OPTIONS = [
 
 const SKIPPED_MESSAGES: Record<Extract<SummaryResult, { status: "skipped" }>["reason"], string> = {
   notifications_off: "Suas notificações estão desligadas. Escolha um dos tipos acima.",
-  no_device: "Este iPhone ainda não está registrado. Permita as notificações e tente de novo.",
+  no_device: "Este aparelho ainda não está registrado. Permita as notificações e tente de novo.",
   empty_watchlist: "Sua carteira está vazia. Adicione um ticker antes de testar.",
   no_quotes: "Não conseguimos as cotações agora. Tente de novo em instantes.",
 };
@@ -151,7 +151,7 @@ export default function User() {
             >
               <BellRing size={17} strokeWidth={1.8} color={colors.primaryText} />
               <Text variant="label" tone="primary" style={styles.noticeText}>
-                Permitir notificações neste iPhone
+                Permitir notificações neste aparelho
               </Text>
             </Pressable>
           ) : null}
@@ -164,7 +164,7 @@ export default function User() {
             >
               <TriangleAlert size={17} strokeWidth={1.8} color={colors.down} />
               <Text variant="label" tone="down" style={styles.noticeText}>
-                As notificações estão bloqueadas no iPhone. Toque pra abrir os Ajustes.
+                As notificações estão bloqueadas neste aparelho. Toque pra abrir as configurações.
               </Text>
             </Pressable>
           ) : null}
