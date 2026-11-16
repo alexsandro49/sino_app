@@ -35,6 +35,14 @@ npm run reset-project
 
 This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
 
+## Android APK
+
+A ready-to-install build is attached to the [latest release](https://github.com/alexsandro49/sino_app/releases/latest). To build a new one in Expo's cloud:
+
+```bash
+npx eas-cli build --platform android --profile preview
+```
+
 ## Backend (Firebase)
 
 The app talks to Firebase Auth for sign-in and to its own HTTP API (`functions/`, Cloud Functions) for market data. The app never calls brapi.dev directly, so the data source can change without republishing the app.
