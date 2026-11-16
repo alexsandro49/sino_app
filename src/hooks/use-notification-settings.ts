@@ -35,11 +35,15 @@ export function useNotificationSettings() {
     };
   }, []);
 
-  const refreshPermission = useCallback(() => {
-    getPushPermission()
-      .then(setPermission)
-      .catch(() => null);
+  const checkPermission = useCallback(async () => {
+    const current = await getPushPermission();
+    setPermission(current);
+    return current;
   }, []);
+
+  const refreshPermission = useCallback(() => {
+    checkPermission().catch(() => null);
+  }, [checkPermission]);
 
   useFocusEffect(refreshPermission);
 
@@ -77,17 +81,20 @@ export function useNotificationSettings() {
     setSaving(false);
   }
 
-  async function enableOnDevice() {
+  async function enableOnDevice(): Promise<PushPermission> {
     setSaving(true);
     try {
-      setPermission(await registerDevice({ askPermission: true }));
+      const current = await registerDevice({ askPermission: true });
+      setPermission(current);
       setError(null);
+      return current;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Não foi possível ativar as notificações.");
+      return permission;
     } finally {
       setSaving(false);
     }
   }
 
-  return { mode, permission, saving, error, changeMode, enableOnDevice };
+  return { mode, permission, saving, error, changeMode, enableOnDevice, checkPermission };
 }

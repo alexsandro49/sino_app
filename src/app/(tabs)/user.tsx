@@ -48,7 +48,7 @@ export default function User() {
   const styles = useStyles();
   const { user, signOut } = useAuth();
   const { tickers } = useWatchlist();
-  const { mode, permission, saving, error, changeMode, enableOnDevice } = useNotificationSettings();
+  const { mode, permission, saving, error, changeMode, enableOnDevice, checkPermission } = useNotificationSettings();
   const [sending, setSending] = useState(false);
 
   const name = user?.name ?? "Sem nome";
@@ -75,9 +75,28 @@ export default function User() {
     ]);
   }
 
+  function alertBlocked() {
+    Alert.alert(
+      "Notificações bloqueadas",
+      "O Sino não tem permissão pra notificar neste aparelho, então o resumo não chegaria aqui.",
+      [
+        { text: "Agora não", style: "cancel" },
+        { text: "Abrir configurações", onPress: () => Linking.openSettings() },
+      ],
+    );
+  }
+
   async function handleSendNow() {
     setSending(true);
     try {
+      const current = await checkPermission();
+      const allowed = current === "undetermined" ? await enableOnDevice() : current;
+
+      if (allowed === "denied" || allowed === "undetermined") {
+        alertBlocked();
+        return;
+      }
+
       const result = await sendSummaryNow();
       if (result.status === "sent") {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
