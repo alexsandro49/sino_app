@@ -4,6 +4,7 @@ import { ExternalLink, X } from "lucide-react-native";
 import { Alert, Pressable, ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { PriceAlerts } from "@/components/price-alerts";
 import { TickerLogo } from "@/components/ticker-logo";
 import { ChangePill } from "@/components/ticker-row";
 import { Button } from "@/components/ui/button";
@@ -134,7 +135,12 @@ export default function TickerDetail() {
         </Pressable>
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
+      >
         {quote ? (
           <>
             <View style={styles.priceBlock}>
@@ -148,6 +154,8 @@ export default function TickerDetail() {
                 </Text>
               </View>
             </View>
+
+            <PriceAlerts symbol={symbol} currentPrice={quote.price} />
 
             <DayRange quote={quote} />
 

@@ -6,7 +6,7 @@ const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
 const EXPO_BATCH_SIZE = 100;
 const FLAT_THRESHOLD = 0.005;
 
-type PushMessage = {
+export type PushMessage = {
   to: string;
   title: string;
   body: string;
@@ -74,7 +74,7 @@ function buildMessages(mode: NotificationMode, quotes: Quote[], tokens: string[]
   );
 }
 
-async function sendPushMessages(messages: PushMessage[]): Promise<{ sent: number; invalidTokens: string[] }> {
+export async function sendPushMessages(messages: PushMessage[]): Promise<{ sent: number; invalidTokens: string[] }> {
   let sent = 0;
   const invalidTokens = new Set<string>();
 
