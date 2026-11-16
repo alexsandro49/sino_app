@@ -63,7 +63,7 @@ export function SwipeableTickerRow({ ticker, quote, pending, onPress, onRemove, 
       friction={1.6}
       rightThreshold={ACTION_WIDTH / 2}
       overshootRight={false}
-      dragOffsetFromRightEdge={12}
+      dragOffsetFromRight={-12}
       containerStyle={styles.container}
       onSwipeableWillOpen={() => {
         Haptics.selectionAsync();

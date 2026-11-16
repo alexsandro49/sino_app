@@ -170,10 +170,10 @@ export default function AddTicker() {
             <Text variant="overline" tone="tertiary" style={styles.sectionLabel}>
               Disponíveis na B3
             </Text>
-          ) : null
+          ) : undefined
         }
         ListEmptyComponent={
-          loading ? null : trimmedQuery ? (
+          loading ? undefined : trimmedQuery ? (
             <Text variant="body" tone={error ? "down" : "secondary"} style={styles.emptyText}>
               {error ?? `Nada encontrado pra "${trimmedQuery}".`}
             </Text>

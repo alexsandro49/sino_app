@@ -82,7 +82,6 @@ export default function RootLayout() {
             <NotificationRouter />
             <Stack
               screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}
-              initialRouteName="signIn"
             >
               <Stack.Screen
                 name="addTicker"
