@@ -106,12 +106,6 @@ export default function User() {
       const result = await sendSummaryNow();
       if (result.status === "sent") {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        Alert.alert(
-          "Resumo enviado",
-          result.notifications === 1
-            ? "Sua notificação chega em instantes."
-            : `${result.notifications} notificações chegam em instantes.`,
-        );
       } else {
         Alert.alert("Não deu pra enviar", SKIPPED_MESSAGES[result.reason]);
       }
